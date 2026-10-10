@@ -1,6 +1,6 @@
 {
   // Deploy lên Cloudflare Workers: chỉ phục vụ file tĩnh trong dist/ sau khi chạy `npm run build`
-  "name": "english-game-dinosaur",
+  "name": "english-game-dinosuar",
   "compatibility_date": "2026-10-10",
   "assets": {
     "directory": "./dist",
