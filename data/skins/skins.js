@@ -30,8 +30,8 @@ export const SKIN_DEFINITIONS = [
       'Khủng long hồng anh đào đeo tai nghe âm nhạc lấy cảm hứng từ Unit 3 (Music), bước chạy êm ái và nhịp nhàng.',
     unlockCondition: {
       type: 'TOTAL_CORRECT',
-      targetValue: 5,
-      description: 'Trả lời đúng tích lũy ít nhất 5 câu hỏi Tiếng Anh 10.',
+      targetValue: 10,
+      description: 'Trả lời đúng tích lũy ít nhất 10 câu hỏi Tiếng Anh 10.',
     },
     visual: {
       primaryColor: '#ec4899',
@@ -52,8 +52,8 @@ export const SKIN_DEFINITIONS = [
       'Khoác sắc xanh dương năng động cùng băng đô thể thao, dành cho người chơi vượt qua cột mốc điểm đầu tiên.',
     unlockCondition: {
       type: 'HIGH_SCORE',
-      targetValue: 100,
-      description: 'Đạt điểm cao nhất từ 100 điểm trở lên trong một lượt chơi.',
+      targetValue: 10,
+      description: 'Trả lời đúng ít nhất 10 câu trong một lượt chơi.',
     },
     visual: {
       primaryColor: '#3b82f6',
@@ -76,8 +76,8 @@ export const SKIN_DEFINITIONS = [
       'Khủng long học giả đội mũ cử nhân vàng hổ phách, biểu tượng của sự chăm chỉ rèn luyện từ vựng Global Success.',
     unlockCondition: {
       type: 'TOTAL_CORRECT',
-      targetValue: 15,
-      description: 'Tích lũy tổng cộng ít nhất 15 câu trả lời Tiếng Anh đúng.',
+      targetValue: 40,
+      description: 'Tích lũy tổng cộng ít nhất 40 câu trả lời Tiếng Anh đúng.',
     },
     visual: {
       primaryColor: '#f59e0b',
@@ -100,7 +100,7 @@ export const SKIN_DEFINITIONS = [
     unlockCondition: {
       type: 'MILESTONES_PASSED',
       targetValue: 1,
-      description: 'Vượt qua thành công ít nhất 1 Thử thách Cột mốc (đạt chuẩn điểm thưởng).',
+      description: 'Vượt qua thành công ít nhất 1 Thử thách Cột mốc.',
     },
     visual: {
       primaryColor: '#ef4444',
@@ -122,8 +122,8 @@ export const SKIN_DEFINITIONS = [
       'Khủng long băng giá vùng cực với cặp sừng tinh thể tuyết và hiệu ứng hạt băng lấp lánh sau mỗi bước nhảy.',
     unlockCondition: {
       type: 'HIGH_SCORE',
-      targetValue: 300,
-      description: 'Đạt điểm cao nhất từ 300 điểm trở lên trong một lượt chơi.',
+      targetValue: 25,
+      description: 'Trả lời đúng ít nhất 25 câu trong một lượt chơi.',
     },
     visual: {
       primaryColor: '#38bdf8',
@@ -145,8 +145,8 @@ export const SKIN_DEFINITIONS = [
       'Phong cách kỹ thuật số hiện đại lấy cảm hứng từ Unit 8 (New Ways to Learn) với tai nghe phát sáng và bước chạy tia chớp.',
     unlockCondition: {
       type: 'TOTAL_CORRECT',
-      targetValue: 30,
-      description: 'Tích lũy tổng cộng ít nhất 30 câu trả lời Tiếng Anh đúng.',
+      targetValue: 80,
+      description: 'Tích lũy tổng cộng ít nhất 80 câu trả lời Tiếng Anh đúng.',
     },
     visual: {
       primaryColor: '#6366f1',
@@ -170,8 +170,8 @@ export const SKIN_DEFINITIONS = [
       'Khủng long hoàng gia mang vương miện vàng ròng và giáp tím huyền thoại, dành cho cao thủ đạt mốc 500 điểm.',
     unlockCondition: {
       type: 'HIGH_SCORE',
-      targetValue: 500,
-      description: 'Đạt điểm cao nhất từ 500 điểm trở lên trong một lượt chơi.',
+      targetValue: 40,
+      description: 'Trả lời đúng ít nhất 40 câu trong một lượt chơi.',
     },
     visual: {
       primaryColor: '#8b5cf6',
@@ -216,8 +216,8 @@ export const SKIN_DEFINITIONS = [
       'Đại pháp sư ngôn ngữ đội mũ phù thủy sao vàng, bậc thầy nắm vững toàn bộ cấu trúc ngữ pháp Tiếng Anh lớp 10.',
     unlockCondition: {
       type: 'TOTAL_CORRECT',
-      targetValue: 60,
-      description: 'Tích lũy tổng cộng ít nhất 60 câu trả lời Tiếng Anh đúng.',
+      targetValue: 200,
+      description: 'Tích lũy tổng cộng ít nhất 200 câu trả lời Tiếng Anh đúng.',
     },
     visual: {
       primaryColor: '#3b0764',
@@ -241,8 +241,8 @@ export const SKIN_DEFINITIONS = [
       'Hóa thân thần mặt trời rực sáng với vòng hào quang vàng kim và hiệu ứng bước chạy ánh sáng khi đạt 1.000 điểm.',
     unlockCondition: {
       type: 'HIGH_SCORE',
-      targetValue: 1000,
-      description: 'Đạt điểm cao nhất từ 1.000 điểm trở lên trong một lượt chơi.',
+      targetValue: 70,
+      description: 'Trả lời đúng ít nhất 70 câu trong một lượt chơi.',
     },
     visual: {
       primaryColor: '#eab308',
@@ -264,8 +264,8 @@ export const SKIN_DEFINITIONS = [
       'Khủng long du hành vũ trụ trang bị mũ phi hành gia tinh vân và bước chạy bụi sao ngân hà.',
     unlockCondition: {
       type: 'HIGH_SCORE',
-      targetValue: 1500,
-      description: 'Đạt điểm cao nhất từ 1.500 điểm trở lên trong một lượt chơi.',
+      targetValue: 100,
+      description: 'Trả lời đúng ít nhất 100 câu trong một lượt chơi.',
     },
     visual: {
       primaryColor: '#e2e8f0',
@@ -289,10 +289,10 @@ export const SKIN_DEFINITIONS = [
       'Khủng long công nghệ bí mật trang bị kính quang học Cyber Visor, chỉ mở khóa khi chinh phục chế độ HardCore hoặc mốc 2.000 điểm.',
     unlockCondition: {
       type: 'MODE_HIGH_SCORE',
-      targetValue: 350,
+      targetValue: 30,
       requiredMode: 'HARDCORE',
-      secondaryValue: 2000,
-      description: 'Đạt ít nhất 350 điểm ở chế độ HardCore HOẶC đạt tổng điểm kỷ lục 2.000 điểm.',
+      secondaryValue: 120,
+      description: 'Trả lời đúng ít nhất 30 câu trong một lượt HardCore HOẶC đạt kỷ lục 120 câu đúng.',
     },
     visual: {
       primaryColor: '#14b8a6',
@@ -314,10 +314,10 @@ export const SKIN_DEFINITIONS = [
       'Thực thể khủng long Hắc Ám Tối Thượng với sừng rồng đỏ thẫm và hào quang tinh vân, mở khóa ở đỉnh cao HardCore hoặc bằng Mã Lệnh Bí Mật.',
     unlockCondition: {
       type: 'MODE_HIGH_SCORE',
-      targetValue: 600,
+      targetValue: 50,
       requiredMode: 'HARDCORE',
-      secondaryValue: 2500,
-      description: 'Đạt 600 điểm chế độ HardCore, đạt 2.500 điểm kỷ lục HOẶC nhập Mã Lệnh mở khóa Full Skin.',
+      secondaryValue: 150,
+      description: 'Trả lời đúng 50 câu trong một lượt HardCore, đạt kỷ lục 150 câu đúng HOẶC nhập Mã Lệnh mở khóa Full Skin.',
     },
     visual: {
       primaryColor: '#18181b',

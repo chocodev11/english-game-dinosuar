@@ -37,7 +37,7 @@ export class SkinManager {
         );
         return {
           unlocked,
-          progressText: `${Math.min(current, target)} / ${target} điểm kỷ lục`,
+          progressText: `${Math.min(current, target)} / ${target} câu đúng trong một lượt`,
           progressPercent: pct,
         };
       }
@@ -76,7 +76,7 @@ export class SkinManager {
         const mode = cond.requiredMode || 'HARDCORE';
         const modeBest = progress.modeHighScores[mode] || 0;
         const overallBest = progress.highScore;
-        const secondaryTarget = cond.secondaryValue || 2000;
+        const secondaryTarget = cond.secondaryValue || 120;
         const unlocked =
           modeBest >= cond.targetValue || overallBest >= secondaryTarget;
         const pct1 = (modeBest / Math.max(1, cond.targetValue)) * 100;
@@ -84,7 +84,7 @@ export class SkinManager {
         const pct = Math.min(100, Math.floor(Math.max(pct1, pct2)));
         return {
           unlocked,
-          progressText: `HardCore: ${modeBest}/${cond.targetValue} đ (hoặc Kỷ lục: ${overallBest}/${secondaryTarget} đ)`,
+          progressText: `HardCore: ${modeBest}/${cond.targetValue} câu (hoặc kỷ lục: ${overallBest}/${secondaryTarget} câu)`,
           progressPercent: pct,
         };
       }

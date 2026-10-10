@@ -109,6 +109,7 @@ Tài liệu này quy định các endpoint HTTP RESTful dự kiến khi kết n�
   "entries": [
     {
       "rank": 1,
+      "skinId": "skin_inferno_drake",
       "fullName": "Nguyễn Minh Khôi",
       "className": "10A1",
       "highScore": 1420,

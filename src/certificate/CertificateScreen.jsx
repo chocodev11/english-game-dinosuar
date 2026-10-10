@@ -1,27 +1,70 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ICONS } from '../game/pixel-art.js';
 import { DinoAvatar } from '../skins/DinoAvatar.jsx';
+import { PixelSprite } from '../ui/PixelSprite.jsx';
+import { Sheet } from '../ui/Sheet.jsx';
 import { soundFX } from '../utils/sound.js';
 import { CertificateManager } from './certificate-manager.js';
 
-export function CertificateScreen({
-  profile,
-  progress,
-  equippedSkin,
-  onBackToMenu,
-}) {
-  const certificates = CertificateManager.syncAndGetCertificates(
-    profile,
-    progress
-  );
+const BADGE_COLORS = {
+  BRONZE: '#e0965a',
+  SILVER: '#c9cdd3',
+  GOLD: '#ffcc1a',
+  HONOR: '#a78bfa',
+};
 
-  const firstEarned = certificates.find((c) => c.isEarned) || certificates[0];
-  const [selectedCertId, setSelectedCertId] = useState(
-    firstEarned.requirement.id
-  );
+// Các điều kiện cần đạt của một chứng chỉ, kèm tiến độ hiện tại
+function getRequirementChecks(req, progress) {
+  return [
+    { label: 'Kỷ lục', current: progress.highScore, target: req.minHighScore },
+    { label: 'Câu đúng', current: progress.totalCorrectAnswers, target: req.minTotalCorrect },
+    { label: 'Cột mốc', current: progress.milestonesPassedCount, target: req.minMilestoneCleared },
+  ].filter((c) => c.target > 0);
+}
 
-  const activeCert =
-    certificates.find((c) => c.requirement.id === selectedCertId) ||
-    certificates[0];
+function CertificateDocument({ cert, skin }) {
+  const { requirement: req, record } = cert;
+
+  return (
+    <div className="bg-white px-5 pt-0 pb-6 text-center text-[#2b2b2b] [print-color-adjust:exact] shadow-[0_0_0_3px_#535353]">
+      <div className="mx-auto h-3 w-full" style={{ backgroundColor: BADGE_COLORS[req.badgeLevel] }} />
+      <p className="mt-5 font-pixel text-[20px] font-bold tracking-[0.2em] text-[#6f6f6f]">
+        English Game Dinosaur
+      </p>
+      <div className="mt-3 flex justify-center">
+        <DinoAvatar skin={skin} size={72} />
+      </div>
+      <h3 className="mt-3 font-pixel text-[32px] font-extrabold leading-tight">{req.title}</h3>
+      <p className="mt-1 text-[13px] text-[#6f6f6f]">{req.englishTitle}</p>
+      <p className="mt-5 text-[14px] text-[#6f6f6f]">Trao cho</p>
+      <p className="font-pixel text-[40px] font-extrabold leading-tight">{record.fullName}</p>
+      <p className="text-[15px]">Lớp {record.className}</p>
+      <p className="mx-auto mt-4 max-w-[36ch] text-[14px] leading-relaxed">{req.description}</p>
+      <dl className="mt-5 grid grid-cols-3 gap-2 border-t border-[#e2e2e2] pt-4 text-[12px]">
+        <div>
+          <dt className="text-[#6f6f6f]">Kỷ lục</dt>
+          <dd className="font-pixel text-[22px] font-bold">{record.achievedScore}</dd>
+        </div>
+        <div>
+          <dt className="text-[#6f6f6f]">Ngày cấp</dt>
+          <dd className="mt-1 font-semibold">
+            {new Date(record.issuedAt).toLocaleDateString('vi-VN')}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[#6f6f6f]">Mã</dt>
+          <dd className="mt-1 break-all font-semibold">{record.certificateCode}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+export function CertificateScreen({ profile, progress, equippedSkin }) {
+  const certificates = CertificateManager.syncAndGetCertificates(profile, progress);
+  const [viewId, setViewId] = useState(null);
+  const viewing = certificates.find((c) => c.requirement.id === viewId && c.record);
 
   const accuracyPercent =
     progress.totalQuestionsAnswered > 0
@@ -30,231 +73,113 @@ export function CertificateScreen({
         )
       : 0;
 
+  const stats = [
+    { label: 'Kỷ lục', value: progress.highScore, color: 'var(--color-sun-deep)' },
+    { label: 'Câu đúng', value: progress.totalCorrectAnswers, color: 'var(--color-leaf-deep)' },
+    { label: 'Chính xác', value: `${accuracyPercent}%`, color: 'var(--color-sky)' },
+    { label: 'Cột mốc', value: progress.milestonesPassedCount, color: 'var(--color-grape)' },
+  ];
+
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* Header (Hidden when printing) */}
-      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">
-            Thành tích Cá nhân & Chứng chỉ Học tập
-          </h1>
-          <p className="text-sm text-slate-400">
-            Hồ sơ học sinh:{' '}
-            <strong className="text-white">{profile.fullName}</strong> · Lớp{' '}
-            <strong className="text-emerald-400">{profile.className}</strong>
-          </p>
-        </div>
+    <div className="mx-auto max-w-[480px] px-4 pt-[calc(1.25rem+env(safe-area-inset-top))]">
+      <h1 className="font-pixel text-[46px] font-extrabold leading-none text-ink">Chứng chỉ</h1>
 
-        <button
-          type="button"
-          onClick={() => {
-            soundFX.playClick();
-            onBackToMenu();
-          }}
-          className="px-4 py-2.5 text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-        >
-          Quay lại Menu chính
-        </button>
-      </div>
-
-      {/* Personal Achievement Stats Strip (Hidden when printing) */}
-      <div className="no-print grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono-num">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs text-slate-400">Điểm kỷ lục cao nhất</div>
-          <div className="text-2xl font-bold text-amber-400 mt-1">
-            {progress.highScore}
+      <dl className="mt-6 grid grid-cols-2 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="pixel-box px-4 py-3">
+            <dt className="text-[13px] text-muted">{s.label}</dt>
+            <dd className="font-pixel text-[36px] font-bold leading-none" style={{ color: s.color }}>
+              {s.value}
+            </dd>
           </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Gần nhất: {progress.lastScore} điểm ({progress.lastMode})
-          </div>
-        </div>
+        ))}
+      </dl>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs text-slate-400">Tổng câu trả lời đúng</div>
-          <div className="text-2xl font-bold text-emerald-400 mt-1">
-            {progress.totalCorrectAnswers}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Độ chính xác: {accuracyPercent}% ({progress.totalQuestionsAnswered}{' '}
-            câu)
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs text-slate-400">Cột mốc đã chinh phục</div>
-          <div className="text-2xl font-bold text-sky-400 mt-1">
-            {progress.milestonesPassedCount}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Số lượt đã chơi: {progress.gamesPlayed} lượt
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="text-xs text-slate-400">Điểm theo chế độ</div>
-          <div className="text-xs text-slate-300 space-y-1 mt-1.5">
-            <div>Basic: {progress.modeHighScores.BASIC} đ</div>
-            <div>Medium: {progress.modeHighScores.MEDIUM} đ</div>
-            <div>HardCore: {progress.modeHighScores.HARDCORE} đ</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Certificate Selector List & Certificate Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="no-print lg:col-span-5 space-y-3">
-          <h2 className="text-base font-display font-bold text-slate-200">
-            Danh mục Chứng chỉ Tiếng Anh 10
-          </h2>
-          {certificates.map((cert) => {
-            const isSelected =
-              cert.requirement.id === activeCert.requirement.id;
-            return (
-              <button
-                key={cert.requirement.id}
-                type="button"
-                onClick={() => {
-                  soundFX.playClick();
-                  setSelectedCertId(cert.requirement.id);
-                }}
-                className={`w-full text-left p-4 rounded-xl border transition-colors cursor-pointer space-y-1.5 ${
-                  isSelected
-                    ? 'bg-slate-900 border-emerald-500'
-                    : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono-num text-slate-400">
-                    Hạng {cert.requirement.badgeLevel}
-                  </span>
-                  <span
-                    className={
-                      cert.isEarned
-                        ? 'text-emerald-400 font-semibold'
-                        : 'text-slate-500'
-                    }
-                  >
-                    {cert.isEarned ? 'Đã đạt chứng chỉ' : 'Chưa đủ điều kiện'}
-                  </span>
-                </div>
-                <div className="text-base font-display font-bold text-white">
-                  {cert.requirement.title}
-                </div>
-                <p className="text-xs text-slate-400">
-                  {cert.requirement.description}
-                </p>
-                <div className="text-xs font-mono-num text-slate-300 pt-1">
-                  {cert.progressSummary}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="lg:col-span-7">
-          {activeCert.isEarned && activeCert.record ? (
-            <div className="space-y-4">
-              <div className="print-certificate bg-slate-900 border-2 border-amber-400/80 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl">
-                <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
-                  <div className="space-y-1">
-                    <p className="text-xs font-mono-num uppercase tracking-widest text-amber-400">
-                      ENGLISH GAME DINOSAUR · GLOBAL SUCCESS GRADE 10
-                    </p>
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                      {activeCert.requirement.title}
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      {activeCert.requirement.englishTitle}
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    <DinoAvatar skin={equippedSkin} size={68} />
-                  </div>
-                </div>
-
-                <div className="space-y-2 py-2">
-                  <p className="text-xs uppercase tracking-wider text-slate-400">
-                    Chứng nhận học sinh:
-                  </p>
-                  <div className="text-2xl sm:text-3xl font-display font-bold text-emerald-400">
-                    {activeCert.record.fullName}
-                  </div>
-                  <p className="text-sm text-slate-200 font-medium">
-                    Lớp:{' '}
-                    <span className="font-mono-num">
-                      {activeCert.record.className}
-                    </span>
-                  </p>
-                </div>
-
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  Đã hoàn thành xuất sắc yêu cầu học tập và phản xạ Tiếng Anh lớp 10 trong trò chơi{' '}
-                  <strong>English Game Dinosaur</strong>:{' '}
-                  {activeCert.requirement.description}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950/90 border border-slate-800 rounded-xl p-4 font-mono-num text-xs">
-                  <div>
-                    <div className="text-slate-400">Điểm kỷ lục ghi nhận</div>
-                    <div className="text-base font-bold text-amber-400 mt-0.5">
-                      {activeCert.record.achievedScore} điểm
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-slate-400">Ngày cấp chứng chỉ</div>
-                    <div className="text-sm font-semibold text-slate-200 mt-0.5">
-                      {new Date(activeCert.record.issuedAt).toLocaleDateString(
-                        'vi-VN'
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-slate-400">Mã chứng chỉ duy nhất</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">
-                      {activeCert.record.certificateCode}
-                    </div>
-                  </div>
+      <ul className="mt-8 grid gap-5">
+        {certificates.map((cert) => {
+          const req = cert.requirement;
+          return (
+            <li key={req.id} className="pixel-box p-4">
+              <div className="flex items-start gap-3">
+                <span
+                  className="grid size-12 shrink-0 place-items-center"
+                  style={{
+                    backgroundColor: cert.isEarned ? BADGE_COLORS[req.badgeLevel] : 'var(--color-rule)',
+                  }}
+                >
+                  <PixelSprite
+                    rows={ICONS.medal}
+                    size={24}
+                    color={cert.isEarned ? '#1f1f1f' : 'var(--color-muted)'}
+                  />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[16px] font-semibold leading-snug text-text">{req.title}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-muted">{req.description}</p>
                 </div>
               </div>
 
-              <div className="no-print flex justify-end">
+              {cert.isEarned && cert.record ? (
                 <button
                   type="button"
                   onClick={() => {
                     soundFX.playClick();
-                    window.print();
+                    setViewId(req.id);
                   }}
-                  className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm rounded-xl transition-colors cursor-pointer"
+                  className="pixel-btn pixel-btn-sky mt-4 min-h-12 w-full text-[22px]"
                 >
-                  In hoặc Lưu PDF Chứng chỉ
+                  Xem chứng chỉ
                 </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-4">
-              <div className="mx-auto w-fit opacity-60">
-                <DinoAvatar skin={equippedSkin} size={80} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-display font-bold text-white">
-                  Chưa mở khóa &ldquo;{activeCert.requirement.title}&rdquo;
-                </h3>
-                <p className="text-sm text-slate-400 max-w-md mx-auto">
-                  Chứng chỉ chỉ được cấp khi người chơi thực sự hoàn thành đủ điều kiện trong quá trình chơi.
-                </p>
-              </div>
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 max-w-md mx-auto text-xs font-mono-num text-slate-300 space-y-1">
-                <div className="text-slate-400">
-                  Tiến trình hiện tại của bạn:
-                </div>
-                <div className="text-amber-400 font-semibold">
-                  {activeCert.progressSummary}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+              ) : (
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {getRequirementChecks(req, progress).map((check) => {
+                    const done = check.current >= check.target;
+                    return (
+                      <li
+                        key={check.label}
+                        className={`flex items-center gap-1.5 px-2 py-1 text-[13px] font-semibold ${
+                          done ? 'bg-leaf-soft text-leaf-deep' : 'bg-paper text-muted'
+                        }`}
+                      >
+                        {done && <PixelSprite rows={ICONS.check} size={11} />}
+                        {check.label} {Math.min(check.current, check.target)}/{check.target}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <Sheet open={Boolean(viewing)} title="Chứng chỉ" onClose={() => setViewId(null)}>
+        {viewing && (
+          <>
+            <CertificateDocument cert={viewing} skin={equippedSkin} />
+            <button
+              type="button"
+              onClick={() => {
+                soundFX.playClick();
+                window.print();
+              }}
+              className="pixel-btn mt-7 w-full"
+            >
+              <PixelSprite rows={ICONS.print} size={20} />
+              In hoặc lưu PDF
+            </button>
+          </>
+        )}
+      </Sheet>
+
+      {/* Bản in riêng nằm ngoài #root để chỉ in đúng chứng chỉ */}
+      {viewing &&
+        createPortal(
+          <div className="print-area hidden print:block">
+            <CertificateDocument cert={viewing} skin={equippedSkin} />
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

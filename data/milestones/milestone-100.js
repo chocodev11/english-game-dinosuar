@@ -1,56 +1,66 @@
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc 100 điểm (5 câu hỏi/lượt, cần đúng ít nhất 4/5 câu).
- * Bám sát Tiếng Anh 10 Global Success.
+ * Bám sát Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5 ở mức dễ.
+ * Mỗi Unit 2 câu: 1 từ vựng, 1 ngữ pháp.
  */
 export const MILESTONE_100_QUESTIONS = [
-  {
-    q: 'Every Sunday morning, my family ______ breakfast together in the garden.',
-    a: ['have', 'has', 'are having', 'had'],
-    c: 1,
-  },
+  // Unit 1: Family Life
   {
     q: 'Doing the ______ includes washing dishes and drying them after meals.',
     a: ['laundry', 'washing-up', 'heavy lifting', 'shopping'],
     c: 1,
   },
   {
-    q: 'Be quiet! The students ______ an English listening test right now.',
-    a: ['take', 'took', 'are taking', 'have taken'],
+    q: 'Every Sunday morning, my father ______ breakfast for the whole family.',
+    a: ['cook', 'cooks', 'is cooking', 'cooking'],
+    c: 1,
+  },
+
+  // Unit 2: Humans and the Environment
+  {
+    q: 'Remember to turn ______ household appliances when they are not in use.',
+    a: ['on', 'up', 'off', 'into'],
     c: 2,
   },
   {
-    q: 'We have already bought the paint. We ______ repaint our classroom tomorrow.',
-    a: ['will', 'are going to', 'would', 'painted'],
-    c: 1,
-  },
-  {
-    q: 'Plastic bags take hundreds of years to ______ in the natural environment.',
-    a: ['break down', 'break up', 'turn on', 'put off'],
+    q: 'Look at those dark clouds! It ______ rain in a few minutes.',
+    a: ['is going to', 'will', 'was going to', 'would'],
     c: 0,
   },
+
+  // Unit 3: Music
   {
-    q: 'The new metro line ______ by thousands of commuters every day.',
-    a: ['uses', 'is used', 'used', 'is using'],
-    c: 1,
+    q: 'The ______ cheered loudly when their favourite singer appeared on stage.',
+    a: ['judge', 'contestant', 'composer', 'audience'],
+    c: 3,
   },
   {
     q: 'He wanted to attend the live concert, ______ all the tickets were sold out.',
     a: ['so', 'and', 'but', 'or'],
     c: 2,
   },
+
+  // Unit 4: For a Better Community
   {
-    q: 'My parents always encourage me ______ part in outdoor activities.',
-    a: ['take', 'to take', 'taking', 'took'],
-    c: 1,
-  },
-  {
-    q: 'We heard the birds ______ joyfully in the trees early this morning.',
-    a: ['sing', 'to sing', 'sang', 'sung'],
+    q: 'The children were very ______ when they received new comic books.',
+    a: ['excited', 'exciting', 'excite', 'excitement'],
     c: 0,
   },
   {
-    q: 'When the teacher walked into the room, the students ______ their group project.',
-    a: ['discussed', 'were discussing', 'discuss', 'have discussed'],
+    q: 'They ______ football in the yard when it started to rain.',
+    a: ['played', 'play', 'are playing', 'were playing'],
+    c: 3,
+  },
+
+  // Unit 5: Inventions
+  {
+    q: 'You need to ______ your phone because the battery is low.',
+    a: ['change', 'charge', 'chase', 'check'],
     c: 1,
+  },
+  {
+    q: 'My grandparents have never ______ a smartphone.',
+    a: ['use', 'using', 'used', 'uses'],
+    c: 2,
   },
 ];

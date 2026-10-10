@@ -1,188 +1,158 @@
-import React from 'react';
-import { soundFX } from '../utils/sound.js';
-import { LeaderboardService } from './leaderboard-service.js';
+import React, { useEffect, useState } from 'react';
+import { SKIN_DEFINITIONS } from '../../data/skins/skins.js';
+import { ApiClient } from '../services/api-client.js';
+import { DinoAvatar } from '../skins/DinoAvatar.jsx';
 
-export function LeaderboardScreen({ profile, onBackToMenu }) {
-  const entries = LeaderboardService.getLeaderboard(profile);
-  const currentPlayerEntry = entries.find((e) => e.isCurrentPlayer);
+// Màu & chiều cao bục cho Top 3 (bục nhất ở giữa)
+const PODIUM = {
+  1: { color: 'var(--color-sun)', height: 76, avatar: 76 },
+  2: { color: '#d4d4d4', height: 54, avatar: 60 },
+  3: { color: '#f0a46a', height: 40, avatar: 60 },
+};
+
+export function LeaderboardScreen({ profile, equippedSkin }) {
+  const [board, setBoard] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  // Tải bảng xếp hạng và tự làm mới khi bảng trực tuyến thay đổi
+  useEffect(() => {
+    let active = true;
+    let refreshTimer = null;
+
+    const load = () => {
+      ApiClient.getLeaderboard(profile)
+        .then((res) => {
+          if (!active) return;
+          setBoard(res);
+          setFailed(false);
+        })
+        .catch((err) => {
+          console.warn('[LeaderboardScreen] Không tải được bảng xếp hạng.', err);
+          if (active) setFailed(true);
+        });
+    };
+    // Gom nhiều thay đổi liên tiếp thành một lần tải lại
+    const scheduleLoad = () => {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(load, 400);
+    };
+
+    load();
+    const unsubscribe = ApiClient.subscribeLeaderboard(scheduleLoad);
+    return () => {
+      active = false;
+      window.clearTimeout(refreshTimer);
+      unsubscribe();
+    };
+  }, [profile]);
+
+  // Người chơi hiện tại luôn hiển thị skin đang dùng
+  const skinOf = (entry) =>
+    entry.isCurrentPlayer
+      ? equippedSkin
+      : SKIN_DEFINITIONS.find((s) => s.id === entry.skinId) || SKIN_DEFINITIONS[0];
+
+  const entries = board?.entries ?? [];
+  const me = board?.me ?? null;
+  const online = ApiClient.isOnline();
+  const podium = [1, 0, 2].map((i) => entries[i]).filter(Boolean);
+
+  let status = null;
+  if (failed && !board) status = 'Không tải được bảng xếp hạng. Kiểm tra kết nối mạng rồi mở lại.';
+  else if (!board) status = 'Đang tải bảng xếp hạng...';
+  else if (entries.length === 0) status = 'Chưa có ai trên bảng. Chơi một lượt để mở màn!';
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">
-            Bảng xếp hạng Học sinh Lớp 10
-          </h1>
-          <p className="text-sm text-slate-400">
-            Xếp hạng theo Điểm kỷ lục cao nhất · Ưu tiên số Cột mốc vượt qua và Tổng câu trả lời đúng khi bằng điểm.
-          </p>
-        </div>
+    <div className="mx-auto max-w-[480px] px-4 pt-[calc(1.25rem+env(safe-area-inset-top))]">
+      <h1 className="font-pixel text-[46px] font-extrabold leading-none text-ink">Xếp hạng</h1>
+      <p className="mt-2 text-[15px] text-muted">Theo số câu đúng nhiều nhất trong một lượt chơi.</p>
 
-        <button
-          type="button"
-          onClick={() => {
-            soundFX.playClick();
-            onBackToMenu();
-          }}
-          className="px-4 py-2.5 text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-        >
-          Quay lại Menu chính
-        </button>
-      </div>
-
-      {/* Transparency Notice for Frontend Stage */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <span>
-          Trạng thái dữ liệu: Đang hiển thị kết quả lưu cục bộ trên trình duyệt kết hợp danh sách học sinh mẫu thử nghiệm (chưa đồng bộ máy chủ Python).
-        </span>
-        {currentPlayerEntry ? (
-          <span className="font-mono-num text-emerald-400 font-semibold whitespace-nowrap">
-            Hạng hiện tại của bạn: Top {currentPlayerEntry.rank} (
-            {currentPlayerEntry.highScore} điểm)
-          </span>
+      <div
+        className="pixel-box mt-6 flex min-h-[72px] items-center justify-between gap-4 px-4"
+        style={{ '--fill': 'var(--color-sky)' }}
+      >
+        {me ? (
+          <>
+            <div className="text-white">
+              <p className="text-[15px] font-semibold">Hạng của bạn</p>
+              <p className="text-[13px] opacity-90">Kỷ lục {me.highScore} câu đúng</p>
+            </div>
+            <p className="font-pixel text-[48px] font-extrabold leading-none text-white">#{me.rank}</p>
+          </>
         ) : (
-          <span className="text-amber-400 whitespace-nowrap">
-            Hãy hoàn thành 1 lượt chơi để ghi tên lên bảng xếp hạng!
-          </span>
+          <p className="text-[15px] font-semibold text-white">
+            Chơi một lượt để có tên trên bảng.
+          </p>
         )}
       </div>
 
-      {/* Top 3 Podium Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {entries.slice(0, 3).map((item) => {
-          const rankLabels = {
-            1: {
-              title: 'TOP 1 · QUÁN QUÂN',
-              accent: 'border-amber-400/80 text-amber-300',
-            },
-            2: {
-              title: 'TOP 2 · Á QUÂN',
-              accent: 'border-slate-400/80 text-slate-200',
-            },
-            3: {
-              title: 'TOP 3 · QUÝ QUÂN',
-              accent: 'border-amber-700/80 text-amber-500',
-            },
-          };
-          const meta = rankLabels[item.rank] || {
-            title: `TOP ${item.rank}`,
-            accent: 'border-slate-800 text-slate-300',
-          };
+      {status && (
+        <output className="mt-10 block text-center font-pixel text-[24px] font-bold text-muted">
+          {status}
+        </output>
+      )}
 
-          return (
-            <div
-              key={item.id}
-              className={`bg-slate-900 border rounded-2xl p-5 space-y-3 ${meta.accent}`}
-            >
-              <div className="flex items-center justify-between text-xs font-mono-num">
-                <span className="font-bold">{meta.title}</span>
-                <span className="text-slate-400">
-                  {item.isCurrentPlayer
-                    ? 'Hồ sơ của bạn'
-                    : item.isSampleData
-                    ? 'Dữ liệu mẫu'
-                    : 'Người chơi cục bộ'}
-                </span>
-              </div>
-
-              <div>
-                <h2 className="text-lg font-display font-bold text-white">
-                  {item.fullName}
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Lớp {item.className} · Chế độ tốt nhất: {item.bestMode}
-                </p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-800 flex items-baseline justify-between font-mono-num">
-                <div>
-                  <span className="text-2xl font-bold text-white">
-                    {item.highScore}
-                  </span>
-                  <span className="text-xs text-slate-400 ml-1">điểm</span>
-                </div>
-                <div className="text-xs text-slate-400">
-                  {item.milestonesPassed} mốc · {item.correctAnswers} câu đúng
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Complete Ranking Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-800 text-xs text-slate-400 uppercase">
-                <th className="py-3.5 px-4 font-semibold">Thứ hạng</th>
-                <th className="py-3.5 px-4 font-semibold">Họ và tên</th>
-                <th className="py-3.5 px-4 font-semibold">Lớp</th>
-                <th className="py-3.5 px-4 font-semibold">Chế độ</th>
-                <th className="py-3.5 px-4 font-semibold text-right">
-                  Cột mốc
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-right">
-                  Câu đúng
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-right">
-                  Điểm cao nhất
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-right">
-                  Nguồn dữ liệu
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/70 text-sm">
-              {entries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  className={
-                    entry.isCurrentPlayer
-                      ? 'bg-emerald-950/30 text-white'
-                      : 'hover:bg-slate-800/40 text-slate-200'
-                  }
-                >
-                  <td className="py-3.5 px-4 font-mono-num font-bold">
-                    Top {entry.rank}
-                  </td>
-                  <td className="py-3.5 px-4 font-semibold">
+      {/* Bục Top 3 cùng skin của từng người */}
+      {podium.length > 0 && (
+        <ol className="mt-8 grid grid-cols-3 items-end gap-4">
+          {podium.map((entry) => {
+            const spot = PODIUM[entry.rank] ?? PODIUM[3];
+            return (
+              <li key={entry.id} className="flex min-w-0 flex-col items-center text-center">
+                <DinoAvatar skin={skinOf(entry)} size={spot.avatar} animated={entry.rank === 1} />
+                <div className="mt-1 flex min-h-[2.5em] w-full flex-col justify-end text-[13px] leading-tight">
+                  <p className="line-clamp-2 font-semibold text-text">
                     {entry.fullName}
-                    {entry.isCurrentPlayer && (
-                      <span className="ml-2 text-xs text-emerald-400 font-normal">
-                        (Bạn)
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono-num text-slate-300">
-                    {entry.className}
-                  </td>
-                  <td className="py-3.5 px-4 text-xs text-slate-300">
-                    {entry.bestMode}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono-num text-right text-slate-300">
-                    {entry.milestonesPassed}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono-num text-right text-slate-300">
-                    {entry.correctAnswers}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono-num font-bold text-right text-amber-400">
-                    {entry.highScore}
-                  </td>
-                  <td className="py-3.5 px-4 text-xs text-right text-slate-400">
-                    {entry.isCurrentPlayer
-                      ? 'Trình duyệt này'
-                      : entry.isSampleData
-                      ? 'Mẫu thử nghiệm'
-                      : 'Người chơi cục bộ'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    {entry.isCurrentPlayer && <span className="text-sky"> (bạn)</span>}
+                  </p>
+                </div>
+                <p className="font-pixel text-[24px] font-bold leading-none text-ink">{entry.highScore}</p>
+                <div
+                  className="pixel-box mt-2 flex w-full justify-center pt-1 font-pixel text-[32px] font-extrabold leading-none text-[#1f1f1f]"
+                  style={{ '--fill': spot.color, height: spot.height }}
+                >
+                  {entry.rank}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      <ol className="mt-8 grid gap-4">
+        {entries.slice(3).map((entry) => (
+          <li
+            key={entry.id}
+            className="pixel-box flex items-center gap-3 py-1.5 pr-3 pl-2"
+            style={
+              entry.isCurrentPlayer
+                ? { '--fill': 'var(--color-sun-soft)', '--edge': 'var(--color-sun-deep)' }
+                : undefined
+            }
+          >
+            <span className="w-8 shrink-0 text-center font-pixel text-[26px] font-bold text-ink">
+              {entry.rank}
+            </span>
+            <DinoAvatar skin={skinOf(entry)} size={44} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[16px] font-semibold text-text">
+                {entry.fullName}
+                {entry.isCurrentPlayer && <span className="font-normal text-muted"> (bạn)</span>}
+              </p>
+              <p className="text-[13px] text-muted">Lớp {entry.className}</p>
+            </div>
+            <span className="font-pixel text-[28px] font-bold tabular-nums text-ink">
+              {entry.highScore}
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <p className="mt-7 text-center text-[13px] text-muted">
+        {online
+          ? 'Bảng xếp hạng trực tuyến, tự cập nhật khi có người lập kỷ lục mới.'
+          : 'Bảng xếp hạng lưu trên máy này, kèm vài tên mẫu để tham khảo.'}
+      </p>
     </div>
   );
 }

@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import { DEFAULT_SKIN_ID } from '../../data/skins/skins.js';
+import { ICONS } from '../game/pixel-art.js';
 import { ApiClient } from '../services/api-client.js';
+import { GroundStage } from '../ui/GroundStage.jsx';
+import { PixelBar } from '../ui/PixelBar.jsx';
+import { PixelSprite } from '../ui/PixelSprite.jsx';
+import { Sheet } from '../ui/Sheet.jsx';
 import { soundFX } from '../utils/sound.js';
 import { DinoAvatar } from './DinoAvatar.jsx';
 import { SkinManager } from './skin-manager.js';
-
-const TIER_FILTERS = ['ALL', 'Basic', 'Rare', 'Legendary', 'God', 'Secret'];
-
-const TIER_TEXT_COLOR = {
-  Basic: 'text-emerald-400',
-  Rare: 'text-sky-400',
-  Legendary: 'text-violet-400',
-  God: 'text-amber-400',
-  Secret: 'text-teal-300',
-};
+import { SKIN_TIERS, TIER_COLORS } from './skin-tiers.js';
 
 export function SkinCollectionScreen({
   profile,
@@ -21,27 +16,22 @@ export function SkinCollectionScreen({
   equippedSkin,
   onSkinEquipped,
   onProgressUpdated,
-  onBackToMenu,
 }) {
-  const [selectedTier, setSelectedTier] = useState('ALL');
-  const [feedbackBanner, setFeedbackBanner] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [codeOpen, setCodeOpen] = useState(false);
   const [commandCode, setCommandCode] = useState('');
+  const [codeFeedback, setCodeFeedback] = useState(null);
 
   const skinItems = SkinManager.getAllSkinsWithStatus(profile, progress);
-
-  const filteredItems =
-    selectedTier === 'ALL'
-      ? skinItems
-      : skinItems.filter((item) => item.skin.tier === selectedTier);
-
   const unlockedCount = skinItems.filter((i) => i.isUnlocked).length;
+  const selected = skinItems.find((i) => i.skin.id === selectedId);
 
   const handleEquip = async (skinId) => {
     soundFX.playClick();
     const res = await ApiClient.saveEquippedSkin(profile, progress, skinId);
-    setFeedbackBanner({ text: res.message, isError: !res.success });
     if (res.success) {
       onSkinEquipped(res.equippedSkin);
+      setSelectedId(null);
     }
   };
 
@@ -51,325 +41,192 @@ export function SkinCollectionScreen({
     if (res.success) {
       soundFX.playMilestonePass();
       onProgressUpdated(res.updatedProgress);
-      const validEquipped = SkinManager.getEquippedSkin(
-        profile,
-        res.updatedProgress
-      );
-      onSkinEquipped(validEquipped);
-      setFeedbackBanner({ text: res.message, isError: false });
+      onSkinEquipped(SkinManager.getEquippedSkin(profile, res.updatedProgress));
       setCommandCode('');
     } else {
       soundFX.playWrong();
-      setFeedbackBanner({ text: res.message, isError: true });
     }
+    setCodeFeedback({ text: res.message, isError: !res.success });
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* Header & Currently Equipped Showcase */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">
-            Bộ sưu tập Skin Khủng Long
-          </h1>
-          <p className="text-sm text-slate-400">
-            Đã mở khóa{' '}
-            <strong className="text-emerald-400 font-mono-num">
-              {unlockedCount}/{skinItems.length}
-            </strong>{' '}
-            skin · Người chơi:{' '}
-            <strong className="text-slate-200">{profile.fullName}</strong> (Lớp{' '}
-            {profile.className})
-          </p>
-        </div>
+    <div className="mx-auto max-w-[480px] px-4 pt-[calc(1.25rem+env(safe-area-inset-top))]">
+      <header className="flex items-baseline justify-between">
+        <h1 className="font-pixel text-[46px] font-extrabold leading-none text-ink">Skin</h1>
+        <p className="text-[15px] text-muted">
+          <span className="font-pixel text-[26px] font-bold text-text">
+            {unlockedCount}/{skinItems.length}
+          </span>{' '}
+          đã mở
+        </p>
+      </header>
 
-        <button
-          type="button"
-          onClick={() => {
-            soundFX.playClick();
-            onBackToMenu();
-          }}
-          className="px-4 py-2.5 text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-        >
-          Quay lại Menu chính
-        </button>
-      </div>
+      <GroundStage className="mt-3">
+        <DinoAvatar skin={equippedSkin} size={112} animated />
+      </GroundStage>
+      <p className="mt-3 text-center text-[17px] font-semibold text-text">{equippedSkin.name}</p>
+      <p
+        className="text-center text-[13px] font-semibold"
+        style={{ color: TIER_COLORS[equippedSkin.tier] }}
+      >
+        {equippedSkin.tier}
+      </p>
 
-      {/* Currently Equipped Skin & Command Code Box Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left: Currently Equipped Skin Banner */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-5">
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 shrink-0">
-              <DinoAvatar skin={equippedSkin} size={92} animated />
+      {SKIN_TIERS.map((tier) => {
+        const items = skinItems.filter((i) => i.skin.tier === tier.id);
+        if (items.length === 0) return null;
+        return (
+          <section key={tier.id} className="mt-8">
+            <h2 className="flex items-center gap-2 font-pixel text-[26px] font-bold leading-none text-text">
+              <span className="size-3" style={{ backgroundColor: tier.color }} />
+              {tier.id}
+            </h2>
+            <ul className="mt-4 grid grid-cols-3 gap-4">
+              {items.map((item) => (
+                <li key={item.skin.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundFX.playClick();
+                      setSelectedId(item.skin.id);
+                    }}
+                    className="pixel-box relative flex w-full flex-col items-center px-1.5 pt-2 pb-2.5"
+                    style={
+                      item.isEquipped
+                        ? { '--edge': 'var(--color-sky)', '--fill': 'var(--color-sky-soft)' }
+                        : undefined
+                    }
+                  >
+                    <DinoAvatar
+                      skin={item.skin}
+                      size={72}
+                      className={item.isUnlocked ? '' : 'opacity-45'}
+                    />
+                    <span className="mt-1 line-clamp-2 min-h-[2.5em] text-center text-[12px] font-semibold leading-tight text-text">
+                      {item.skin.name}
+                    </span>
+                    {!item.isUnlocked && (
+                      <PixelBar
+                        value={item.progressPercent / 100}
+                        color={tier.color}
+                        label={`Tiến độ mở khóa ${item.skin.name}`}
+                        className="mt-1.5 h-1.5"
+                      />
+                    )}
+                    {item.isEquipped && (
+                      <span className="absolute right-1 top-1 grid size-5 place-items-center bg-sky text-white">
+                        <PixelSprite rows={ICONS.check} size={12} label="Đang dùng" />
+                      </span>
+                    )}
+                    {!item.isUnlocked && (
+                      <span className="absolute right-1.5 top-1.5 text-muted">
+                        <PixelSprite rows={ICONS.lock} size={12} label="Đang khóa" />
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+
+      <section className="mt-10">
+        {codeOpen ? (
+          <form onSubmit={handleRedeemCode}>
+            <label htmlFor="skin-code" className="mb-2.5 block text-[15px] font-semibold text-text">
+              Mã mở khóa
+            </label>
+            <div className="flex gap-4">
+              <input
+                id="skin-code"
+                type="text"
+                value={commandCode}
+                autoCapitalize="characters"
+                onChange={(e) => setCommandCode(e.target.value)}
+                className="pixel-input flex-1 uppercase"
+              />
+              <button type="submit" className="pixel-btn pixel-btn-sky px-4 text-[22px]">
+                Dùng mã
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <div className="text-xs text-slate-400">
-                Skin đang trang bị · Cấp độ{' '}
-                <span
-                  className={`font-semibold ${TIER_TEXT_COLOR[equippedSkin.tier]}`}
-                >
-                  {equippedSkin.tier}
-                </span>
-              </div>
-              <h2 className="text-xl font-display font-bold text-white">
-                {equippedSkin.name}
-              </h2>
-              <p className="text-sm text-slate-300">
-                {equippedSkin.description}
+            {codeFeedback && (
+              <p
+                role="status"
+                className={`mt-3 text-[14px] font-medium ${
+                  codeFeedback.isError ? 'text-berry-deep' : 'text-leaf-deep'
+                }`}
+              >
+                {codeFeedback.text}
               </p>
-            </div>
-          </div>
-
-          {equippedSkin.id !== DEFAULT_SKIN_ID && (
-            <button
-              type="button"
-              onClick={() => handleEquip(DEFAULT_SKIN_ID)}
-              className="px-4 py-2 text-xs font-semibold bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              Về mặc định
-            </button>
-          )}
-        </div>
-
-        {/* Right: Dedicated Command Code Input Box to Unlock Full Skins */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-mono-num uppercase text-amber-400 font-semibold">
-                Khu vực Nhập Mã Lệnh Riêng
-              </span>
-              <span className="text-slate-400 font-mono-num">
-                {unlockedCount === skinItems.length
-                  ? 'Đã mở Full 100% Skin'
-                  : `Còn ${skinItems.length - unlockedCount} skin khóa`}
-              </span>
-            </div>
-            <h3 className="text-base font-display font-bold text-white">
-              Mở khóa Full Skin bằng Mã Lệnh
-            </h3>
-            <p className="text-xs text-slate-400">
-              Nhập mã lệnh đặc biệt để mở khóa ngay toàn bộ {skinItems.length}{' '}
-              Skin (từ Basic đến God & Secret).
-            </p>
-          </div>
-
-          <form onSubmit={handleRedeemCode} className="flex items-center gap-2">
-            <input
-              type="text"
-              value={commandCode}
-              onChange={(e) => setCommandCode(e.target.value)}
-              placeholder="Nhập mã lệnh (VD: FULLSKIN)..."
-              aria-label="Mã lệnh mở khóa skin"
-              className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-amber-400 focus:outline-none text-sm font-mono-num text-white placeholder-slate-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              Kích hoạt mã
-            </button>
+            )}
           </form>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pt-1 border-t border-slate-800/80">
-            <span>
-              Mã hỗ trợ:{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  soundFX.playClick();
-                  setCommandCode('FULLSKIN');
-                }}
-                className="font-mono-num text-emerald-400 hover:underline cursor-pointer"
-              >
-                FULLSKIN
-              </button>
-              {' · '}
-              <button
-                type="button"
-                onClick={() => {
-                  soundFX.playClick();
-                  setCommandCode('DINO10');
-                }}
-                className="font-mono-num text-emerald-400 hover:underline cursor-pointer"
-              >
-                DINO10
-              </button>
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                soundFX.playClick();
-                setCommandCode('RESETSKIN');
-              }}
-              className="font-mono-num text-slate-400 hover:text-slate-200 hover:underline cursor-pointer"
-            >
-              Mã đặt lại: RESETSKIN
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {feedbackBanner && (
-        <div
-          className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between border ${
-            feedbackBanner.isError
-              ? 'bg-rose-950/60 border-rose-500/60 text-rose-200'
-              : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200'
-          }`}
-        >
-          <span>{feedbackBanner.text}</span>
+        ) : (
           <button
             type="button"
-            onClick={() => setFeedbackBanner(null)}
-            className="text-xs underline ml-4 cursor-pointer opacity-80 hover:opacity-100"
+            onClick={() => setCodeOpen(true)}
+            className="min-h-11 text-[15px] font-semibold text-sky"
           >
-            Đóng
+            Có mã mở khóa?
           </button>
-        </div>
-      )}
+        )}
+      </section>
 
-      {/* Interactive Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-900 border border-slate-800 rounded-xl w-fit">
-        {TIER_FILTERS.map((tier) => {
-          const active = selectedTier === tier;
-          const countInTier =
-            tier === 'ALL'
-              ? skinItems.length
-              : skinItems.filter((s) => s.skin.tier === tier).length;
-
-          return (
-            <button
-              key={tier}
-              type="button"
-              onClick={() => {
-                soundFX.playClick();
-                setSelectedTier(tier);
-              }}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                active
-                  ? 'bg-emerald-500 text-slate-950 shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              {tier === 'ALL'
-                ? `Tất cả (${countInTier})`
-                : `${tier} (${countInTier})`}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Skin Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredItems.map((item) => {
-          const {
-            skin,
-            isUnlocked,
-            isEquipped,
-            progressText,
-            progressPercent,
-          } = item;
-
-          return (
-            <div
-              key={skin.id}
-              className={`bg-slate-900 rounded-2xl p-5 flex flex-col justify-between gap-4 border transition-colors ${
-                isEquipped
-                  ? 'border-emerald-500'
-                  : isUnlocked
-                  ? 'border-slate-800 hover:border-slate-700'
-                  : 'border-slate-800/60 opacity-85'
-              }`}
-            >
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs text-slate-400">
-                      Cấp độ{' '}
-                      <span
-                        className={`font-semibold ${TIER_TEXT_COLOR[skin.tier]}`}
-                      >
-                        {skin.tier}
-                      </span>
-                      <span className="mx-1.5">·</span>
-                      <span>
-                        {isEquipped
-                          ? 'Đang sử dụng'
-                          : isUnlocked
-                          ? 'Đã sở hữu'
-                          : 'Đang khóa'}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-display font-bold text-white mt-0.5">
-                      {skin.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Visual Preview Box */}
-                <div className="bg-slate-950 border border-slate-800/90 rounded-xl py-4 flex items-center justify-center">
-                  <DinoAvatar skin={skin} size={88} />
-                </div>
-
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  {skin.description}
-                </p>
-
-                {/* Unlock Condition & Progress */}
-                <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Điều kiện mở khóa:</span>
-                    <span className="font-mono-num text-slate-300 font-medium">
-                      {progressText}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    {skin.unlockCondition.description}
-                  </p>
-                  {!isUnlocked && (
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-amber-400 transition-all duration-300"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <div className="pt-2">
-                {!isUnlocked ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed whitespace-nowrap"
-                  >
-                    Chưa mở khóa ({progressPercent}%)
-                  </button>
-                ) : isEquipped ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-xs font-bold cursor-default whitespace-nowrap"
-                  >
-                    Đang sử dụng
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleEquip(skin.id)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    Trang bị
-                  </button>
-                )}
-              </div>
+      <Sheet
+        open={Boolean(selected)}
+        title={selected?.skin.name ?? ''}
+        onClose={() => setSelectedId(null)}
+      >
+        {selected && (
+          <>
+            <GroundStage cloud={false}>
+              <DinoAvatar skin={selected.skin} size={128} animated />
+            </GroundStage>
+            <p className="mt-4 flex items-center gap-3 text-[14px] font-semibold">
+              <span style={{ color: TIER_COLORS[selected.skin.tier] }}>{selected.skin.tier}</span>
+              {!selected.isUnlocked && (
+                <span className="flex items-center gap-1.5 text-muted">
+                  <PixelSprite rows={ICONS.lock} size={12} />
+                  Chưa mở khóa
+                </span>
+              )}
+            </p>
+            <p className="mt-1 text-[15px] leading-relaxed text-text">{selected.skin.description}</p>
+            <div className="pixel-box mt-5 p-4">
+              <p className="text-[13px] text-muted">Cách mở khóa</p>
+              <p className="mt-1 text-[15px] leading-relaxed text-text">
+                {selected.skin.unlockCondition.description}
+              </p>
+              {!selected.isUnlocked && (
+                <>
+                  <PixelBar
+                    value={selected.progressPercent / 100}
+                    color={TIER_COLORS[selected.skin.tier]}
+                    label="Tiến độ mở khóa"
+                    className="mt-3 h-3"
+                  />
+                  <p className="mt-2 text-[13px] text-muted">{selected.progressText}</p>
+                </>
+              )}
             </div>
-          );
-        })}
-      </div>
+            {selected.isEquipped && (
+              <p className="mt-7 flex items-center justify-center gap-2 font-pixel text-[26px] font-bold text-sky">
+                <PixelSprite rows={ICONS.check} size={18} />
+                Đang dùng
+              </p>
+            )}
+            {selected.isUnlocked && !selected.isEquipped && (
+              <button
+                type="button"
+                onClick={() => handleEquip(selected.skin.id)}
+                className="pixel-btn mt-7 w-full"
+              >
+                Dùng skin này
+              </button>
+            )}
+          </>
+        )}
+      </Sheet>
     </div>
   );
 }

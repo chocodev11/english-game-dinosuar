@@ -12,7 +12,7 @@ export class CertificateManager {
     const eligible = scoreOk && milestoneOk && correctOk;
 
     const parts = [
-      `Điểm kỷ lục: ${Math.min(progress.highScore, req.minHighScore)}/${req.minHighScore}`,
+      `Kỷ lục câu đúng: ${Math.min(progress.highScore, req.minHighScore)}/${req.minHighScore}`,
     ];
     if (req.minMilestoneCleared > 0) {
       parts.push(

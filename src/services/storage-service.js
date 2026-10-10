@@ -1,4 +1,5 @@
-const STORAGE_PREFIX = 'english_game_dinosaur_v1_';
+// v2: điểm = số câu trả lời đúng (v1 tính theo quãng đường chạy)
+const STORAGE_PREFIX = 'english_game_dinosaur_v2_';
 
 export const STORAGE_KEYS = {
   PLAYER_PROFILE: `${STORAGE_PREFIX}player_profile`,

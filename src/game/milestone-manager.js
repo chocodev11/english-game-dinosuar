@@ -1,6 +1,9 @@
 import { MILESTONE_CONFIGS } from '../../data/config/game-config.js';
 import { QuestionController } from './question-controller.js';
 
+// Báo "sắp tới mốc" khi chỉ còn vài câu đúng nữa
+const APPROACHING_REMAINING = 3;
+
 export class MilestoneManager {
   constructor() {
     this.processedTriggerKeys = new Set();
@@ -34,7 +37,6 @@ export class MilestoneManager {
           Math.floor((gainedInSpan / span) * 100)
         );
         const pointsRemaining = cfg.scoreThreshold - currentScore;
-        const isApproaching = progressPercent >= 65 || pointsRemaining <= 35;
 
         return {
           config: cfg,
@@ -43,11 +45,7 @@ export class MilestoneManager {
           currentScore,
           pointsRemaining,
           progressPercent,
-          isApproaching,
-          motivationMessage:
-            pointsRemaining <= 35
-              ? `Chỉ còn ${pointsRemaining} điểm nữa là chạm mốc ${cfg.scoreThreshold} điểm (+${cfg.bonusPoints} điểm thưởng)! Hãy tiếp tục ôn luyện nhé!`
-              : `Đã đạt ${progressPercent}% chặng đường tới mốc ${cfg.scoreThreshold} điểm (còn ${pointsRemaining} điểm để mở thử thách +${cfg.bonusPoints} điểm).`,
+          isApproaching: pointsRemaining <= APPROACHING_REMAINING,
         };
       }
       prevThreshold = cfg.scoreThreshold;
@@ -56,7 +54,7 @@ export class MilestoneManager {
     const recurringCfg =
       MILESTONE_CONFIGS.find((m) => m.isRecurringFromThreshold) ||
       MILESTONE_CONFIGS[MILESTONE_CONFIGS.length - 1];
-    const step = recurringCfg.recurringStep || 1000;
+    const step = recurringCfg.recurringStep || 50;
 
     let nextThreshold = recurringCfg.scoreThreshold;
     if (currentScore >= recurringCfg.scoreThreshold) {
@@ -74,7 +72,6 @@ export class MilestoneManager {
       Math.floor((gainedInSpan / span) * 100)
     );
     const pointsRemaining = nextThreshold - currentScore;
-    const isApproaching = progressPercent >= 70 || pointsRemaining <= 120;
 
     return {
       config: recurringCfg,
@@ -83,8 +80,7 @@ export class MilestoneManager {
       currentScore,
       pointsRemaining,
       progressPercent,
-      isApproaching,
-      motivationMessage: `Còn ${pointsRemaining} điểm nữa là chinh phục Đại Cột mốc ${nextThreshold} điểm (+${recurringCfg.bonusPoints} điểm thưởng)!`,
+      isApproaching: pointsRemaining <= APPROACHING_REMAINING,
     };
   }
 
@@ -118,7 +114,7 @@ export class MilestoneManager {
           }
         }
       } else {
-        const step = cfg.recurringStep || 1000;
+        const step = cfg.recurringStep || 50;
         if (cleanScore >= cfg.scoreThreshold) {
           const highestReachedStep =
             cfg.scoreThreshold +
@@ -166,7 +162,6 @@ export class MilestoneManager {
       questions: batch.questions,
       requiredCorrectCount,
       warningMessage: batch.warningMessage,
-      bonusClaimed: false,
     };
   }
 }

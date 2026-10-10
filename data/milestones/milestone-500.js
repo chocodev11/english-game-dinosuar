@@ -1,126 +1,141 @@
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc 500 điểm (20 câu hỏi/lượt, cần đạt tối thiểu 80% = 16/20 câu).
- * Bám sát chương trình Tiếng Anh 10 Global Success.
+ * Bám sát chương trình Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5.
+ * Mỗi Unit 5 câu: 2 từ vựng, 2 ngữ pháp, 1 phát âm.
  */
 export const MILESTONE_500_QUESTIONS = [
+  // Unit 1: Family Life
   {
-    q: 'The charity organisation has provided shelter for ______ people in the city.',
-    a: ['homeless', 'careless', 'endless', 'harmless'],
+    q: 'Before cooking dinner, my mother usually goes to the market to buy ______.',
+    a: ['laundry', 'groceries', 'chores', 'bonds'],
+    c: 1,
+  },
+  {
+    q: 'In my family, my dad does the heavy ______ like moving furniture.',
+    a: ['lifting', 'carrying', 'taking', 'holding'],
     c: 0,
   },
   {
-    q: 'I was reading a book about Thomas Edison when the electricity suddenly ______ out.',
-    a: ['go', 'goes', 'went', 'was going'],
+    q: 'Be quiet! The students ______ an English listening test right now.',
+    a: ['take', 'took', 'are taking', 'have taken'],
     c: 2,
   },
+  {
+    q: '______ your brother often help your mother with the cooking?',
+    a: ['Does', 'Is', 'Do', 'Has'],
+    c: 0,
+  },
+  {
+    q: 'Which word contains the consonant blend /kr/?',
+    a: ['chores', 'cleaning', 'grocery', 'crowded'],
+    c: 3,
+  },
+
+  // Unit 2: Humans and the Environment
+  {
+    q: 'Instead of throwing away old clothes, we can ______ them by turning them into bags.',
+    a: ['reduce', 'reuse', 'refuse', 'remove'],
+    c: 1,
+  },
+  {
+    q: 'Plastic bags take hundreds of years to ______ in the natural environment.',
+    a: ['break down', 'break out', 'turn on', 'put off'],
+    c: 0,
+  },
+  {
+    q: 'We have already bought the paint. We ______ repaint our classroom tomorrow.',
+    a: ['will', 'would', 'are going to', 'were'],
+    c: 2,
+  },
+  {
+    q: 'The new metro line ______ by thousands of passengers every day.',
+    a: ['is used', 'uses', 'used', 'is using'],
+    c: 0,
+  },
+  {
+    q: 'Which word does NOT begin with the sound /gr/?',
+    a: ['green', 'grow', 'ground', 'protect'],
+    c: 3,
+  },
+
+  // Unit 3: Music
+  {
+    q: 'Chau Van singing is an ancient form of ______ Vietnamese music.',
+    a: ['modern', 'traditional', 'electronic', 'foreign'],
+    c: 1,
+  },
+  {
+    q: 'The ______ gave the young singer high scores for her amazing voice.',
+    a: ['albums', 'instruments', 'concerts', 'judges'],
+    c: 3,
+  },
+  {
+    q: 'The judges decided ______ the talented guitarist to the final round.',
+    a: ['send', 'sending', 'to send', 'sent'],
+    c: 2,
+  },
+  {
+    q: 'We can listen to music, ______ we can watch a film tonight.',
+    a: ['or', 'so', 'but', 'for'],
+    c: 0,
+  },
+  {
+    q: 'Choose the word that has a different stress pattern from the others.',
+    a: ['talent', 'guitar', 'programme', 'artist'],
+    c: 1,
+  },
+
+  // Unit 4: For a Better Community
   {
     q: 'Many teenagers find community service very ______ because they can help others.',
-    a: ['meaning', 'meaningful', 'meaningless', 'mean'],
-    c: 1,
+    a: ['meaningless', 'meaning', 'mean', 'meaningful'],
+    c: 3,
   },
   {
-    q: 'We felt ______ after walking 10 kilometres to deliver food to the remote village.',
-    a: ['exhaust', 'exhausting', 'exhausted', 'exhaustion'],
+    q: 'Students from our school ______ books and clothes to poor children every year.',
+    a: ['donation', 'donor', 'donate', 'donating'],
     c: 2,
   },
   {
-    q: 'Since the invention of the Internet, communication ______ much faster and easier.',
-    a: ['became', 'has become', 'becomes', 'is becoming'],
+    q: 'I was reading a book about Thomas Edison when the lights suddenly ______ out.',
+    a: ['went', 'go', 'goes', 'was going'],
+    c: 0,
+  },
+  {
+    q: 'What ______ you doing at 8 p.m. yesterday?',
+    a: ['did', 'were', 'are', 'was'],
     c: 1,
+  },
+  {
+    q: 'In which phrase is "record" stressed on the second syllable?',
+    a: ['a world record', 'a record shop', 'to record a song', 'a school record'],
+    c: 2,
+  },
+
+  // Unit 5: Inventions
+  {
+    q: 'Driverless cars are equipped with smart ______ to detect obstacles on the road.',
+    a: ['stoves', 'sensors', 'brooms', 'curtains'],
+    c: 1,
+  },
+  {
+    q: 'This app can ______ thousands of photos without using much memory.',
+    a: ['store', 'shop', 'stay', 'stop'],
+    c: 0,
+  },
+  {
+    q: 'Since the invention of the Internet, communication ______ much faster.',
+    a: ['became', 'becomes', 'has become', 'is becoming'],
+    c: 2,
   },
   {
     q: 'Vacuum cleaners are very useful for ______ dust from carpets and sofas.',
-    a: ['remove', 'to remove', 'removing', 'removed'],
-    c: 2,
+    a: ['remove', 'to remove', 'removed', 'removing'],
+    c: 3,
   },
   {
-    q: 'Have you ever used an English learning app ______ your pronunciation?',
-    a: ['improve', 'improving', 'to improve', 'improved'],
-    c: 2,
-  },
-  {
-    q: 'Driverless cars are equipped with smart ______ to detect obstacles on the road.',
-    a: ['sensors', 'stoves', 'brooms', 'curtains'],
-    c: 0,
-  },
-  {
-    q: 'Women and men should ______ equally for doing the same job.',
-    a: ['pay', 'be paid', 'paid', 'paying'],
-    c: 1,
-  },
-  {
-    q: 'Child marriage ought to ______ completely in all parts of the world.',
-    a: ['ban', 'banned', 'be banned', 'banning'],
-    c: 2,
-  },
-  {
-    q: 'A Kindergarten teacher needs to be very ______ and caring with young children.',
-    a: ['patient', 'rude', 'violent', 'selfish'],
-    c: 0,
-  },
-  {
-    q: 'Female pilots have proved that they can fly aircraft as ______ as male pilots.',
-    a: ['skilful', 'skilfully', 'more skilful', 'most skilful'],
-    c: 1,
-  },
-  {
-    q: 'Viet Nam is a member of many international ______ such as the UN, ASEAN, and WTO.',
-    a: ['organisations', 'inventions', 'instruments', 'chores'],
-    c: 0,
-  },
-  {
-    q: 'This year, our agricultural exports are ______ than they were last year.',
-    a: ['high', 'higher', 'highest', 'as high'],
-    c: 1,
-  },
-  {
-    q: 'FAO is one of the ______ agencies working to end hunger worldwide.',
-    a: ['large', 'larger', 'largest', 'more large'],
-    c: 2,
-  },
-  {
-    q: 'The course ______ we registered for focuses on digital presentation skills.',
-    a: ['who', 'which', 'whom', 'whose'],
-    c: 1,
-  },
-  {
-    q: 'Students ______ actively participate in group discussions often remember lessons longer.',
-    a: ['which', 'who', 'whose', 'where'],
-    c: 1,
-  },
-  {
-    q: 'You can download audio files ______ help you practice listening offline.',
-    a: ['that', 'who', 'whose', 'whom'],
-    c: 0,
-  },
-  {
-    q: 'Lan told me that she ______ take part in the Earth Hour campaign the following day.',
-    a: ['will', 'would', 'can', 'may'],
-    c: 1,
-  },
-  {
-    q: 'The ranger warned tourists not ______ campfires in the dry forest.',
-    a: ['light', 'lighting', 'to light', 'lit'],
-    c: 2,
-  },
-  {
-    q: 'If we recycle paper and cardboard, we ______ thousands of trees every year.',
-    a: ['save', 'will save', 'saved', 'would save'],
-    c: 1,
-  },
-  {
-    q: 'If I were the mayor of this city, I ______ more cycling lanes for citizens.',
-    a: ['build', 'will build', 'would build', 'built'],
-    c: 2,
-  },
-  {
-    q: 'Ecotourists respect local traditions and avoid ______ wildlife habitats.',
-    a: ['disturbing', 'protecting', 'supporting', 'admiring'],
-    c: 0,
-  },
-  {
-    q: 'Global warming leads to rising sea levels and extreme ______ events.',
-    a: ['weather', 'music', 'charity', 'household'],
-    c: 0,
+    q: 'Choose the word that has a different stress pattern from the others.',
+    a: ['invention', 'inventor', 'connection', 'telephone'],
+    c: 3,
   },
 ];

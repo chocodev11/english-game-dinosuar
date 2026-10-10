@@ -1,6 +1,6 @@
 /**
  * NGÂN HÀNG CÂU HỎI PHỤ TƯƠNG LAI — PHẦN 01 (Dự kiến: Câu 001 -> Câu 100)
- * Chủ đề gợi ý: Unit 1 (Family Life) & Unit 2 (Humans and the Environment) — Tiếng Anh 10 Global Success.
+ * Chủ đề gợi ý: Unit 1 (Family Life) — Tiếng Anh 10 Global Success.
  *
  * HƯỚNG DẪN BỔ SUNG DỮ LIỆU CHO QUẢN TRỊ VIÊN:
  * 1. Mỗi phần tử trong mảng phải tuân thủ đúng cấu trúc:

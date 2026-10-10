@@ -15,7 +15,8 @@
   - `skins/`: Quản lý mở khóa/trang bị (`skin-manager.ts`), vẽ nhân vật (`DinoAvatar.tsx`) và giao diện bộ sưu tập (`SkinCollectionScreen.tsx`).
   - `leaderboard/`: Xử lý sắp xếp thứ hạng (`leaderboard-service.ts`) và giao diện (`LeaderboardScreen.tsx`).
   - `certificate/`: Kiểm tra điều kiện cấp chứng chỉ, sinh mã chứng chỉ (`certificate-manager.ts`) và giao diện in ấn (`CertificateScreen.tsx`).
-  - `services/`: Lớp giao tiếp trung gian (`api-client.ts`, `score-service.ts`, `storage-service.ts`).
+  - `services/`: Lớp giao tiếp trung gian (`api-client.ts`, `score-service.ts`, `storage-service.ts`) và `supabase-client.js` kết nối bảng xếp hạng trực tuyến (tự quay về lưu trên máy khi chưa cấu hình).
   - `utils/`: Kiểm tra dữ liệu (`validators.ts`), trộn ngẫu nhiên (`random.ts`) và âm thanh Web Audio API (`sound.ts`).
+- `/supabase/schema.sql`: Bảng, quyền truy cập, hàm `submit_score` và realtime cho bảng xếp hạng trực tuyến trên Supabase.
 - `/backend/`: Tài liệu hướng dẫn triển khai Backend Python ở giai đoạn tiếp theo.
 - `/requirement/`: Tài liệu logic, kiến trúc và hợp đồng API (`api-contract.md`).

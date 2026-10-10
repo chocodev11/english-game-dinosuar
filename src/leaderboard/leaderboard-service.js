@@ -1,58 +1,64 @@
+import { DEFAULT_SKIN_ID } from '../../data/skins/skins.js';
 import { STORAGE_KEYS, StorageService } from '../services/storage-service.js';
 
 const INITIAL_SAMPLE_ENTRIES = [
   {
     id: 'sample_1',
+    skinId: 'skin_inferno_drake',
     fullName: 'Nguyễn Minh Khôi',
     className: '10A1',
-    highScore: 1420,
+    highScore: 58,
     bestMode: 'HARDCORE',
     milestonesPassed: 3,
-    correctAnswers: 64,
+    correctAnswers: 240,
     achievedAt: '2026-10-01T08:30:00.000Z',
     isSampleData: true,
   },
   {
     id: 'sample_2',
+    skinId: 'skin_sakura_breeze',
     fullName: 'Trần Lê Bảo Ngọc',
     className: '10A2',
-    highScore: 1080,
+    highScore: 44,
     bestMode: 'MEDIUM',
     milestonesPassed: 3,
-    correctAnswers: 52,
+    correctAnswers: 190,
     achievedAt: '2026-10-02T09:15:00.000Z',
     isSampleData: true,
   },
   {
     id: 'sample_3',
+    skinId: 'skin_arctic_glacier',
     fullName: 'Lê Hoàng Nam',
     className: '10A1',
-    highScore: 640,
+    highScore: 31,
     bestMode: 'MEDIUM',
     milestonesPassed: 2,
-    correctAnswers: 31,
+    correctAnswers: 120,
     achievedAt: '2026-10-03T14:20:00.000Z',
     isSampleData: true,
   },
   {
     id: 'sample_4',
+    skinId: 'skin_amber_scholar',
     fullName: 'Phạm Thu Hà',
     className: '10C1',
-    highScore: 480,
+    highScore: 22,
     bestMode: 'BASIC',
     milestonesPassed: 1,
-    correctAnswers: 24,
+    correctAnswers: 75,
     achievedAt: '2026-10-04T10:00:00.000Z',
     isSampleData: true,
   },
   {
     id: 'sample_5',
+    skinId: 'skin_cobalt_sprinter',
     fullName: 'Vũ Đức Anh',
     className: '10B3',
-    highScore: 230,
+    highScore: 12,
     bestMode: 'BASIC',
     milestonesPassed: 1,
-    correctAnswers: 14,
+    correctAnswers: 40,
     achievedAt: '2026-10-05T16:45:00.000Z',
     isSampleData: true,
   },
@@ -107,15 +113,29 @@ export class LeaderboardService {
             currentProfile.className.toLowerCase()
       );
 
+      // Bản ghi mẫu đã lưu từ phiên bản cũ chưa có skinId thì lấy lại từ dữ liệu mẫu gốc
+      const skinId =
+        entry.skinId ||
+        INITIAL_SAMPLE_ENTRIES.find((s) => s.id === entry.id)?.skinId ||
+        DEFAULT_SKIN_ID;
+
       return {
         ...entry,
+        skinId,
         rank: idx + 1,
         isCurrentPlayer,
       };
     });
   }
 
-  static upsertPlayerScore(profile, progress) {
+  static getBestMode(progress) {
+    const { BASIC, MEDIUM, HARDCORE } = progress.modeHighScores;
+    if (HARDCORE > 0 && HARDCORE >= MEDIUM && HARDCORE >= BASIC) return 'HARDCORE';
+    if (MEDIUM > 0 && MEDIUM >= BASIC) return 'MEDIUM';
+    return progress.lastMode || 'BASIC';
+  }
+
+  static upsertPlayerScore(profile, progress, skinId = DEFAULT_SKIN_ID) {
     const currentBoard = this.getLeaderboard(profile);
     const prevPlayerEntry = currentBoard.find((e) => e.isCurrentPlayer);
     const previousRank = prevPlayerEntry ? prevPlayerEntry.rank : null;
@@ -128,22 +148,13 @@ export class LeaderboardService {
         e.className.toLowerCase() === profile.className.toLowerCase()
     );
 
-    const bestMode =
-      progress.modeHighScores.HARDCORE >= progress.modeHighScores.MEDIUM &&
-      progress.modeHighScores.HARDCORE >= progress.modeHighScores.BASIC &&
-      progress.modeHighScores.HARDCORE > 0
-        ? 'HARDCORE'
-        : progress.modeHighScores.MEDIUM >= progress.modeHighScores.BASIC &&
-          progress.modeHighScores.MEDIUM > 0
-        ? 'MEDIUM'
-        : progress.lastMode || 'BASIC';
-
     const updatedItem = {
       id: profile.internalPlayerId,
+      skinId,
       fullName: profile.fullName,
       className: profile.className,
       highScore: progress.highScore,
-      bestMode,
+      bestMode: this.getBestMode(progress),
       milestonesPassed: progress.milestonesPassedCount,
       correctAnswers: progress.totalCorrectAnswers,
       achievedAt:
