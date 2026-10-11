@@ -21,6 +21,7 @@ const MODE_STYLES = {
 const RULES = [
   'Chạm màn hình hoặc nhấn Space để nhảy qua chướng ngại vật. Đâm vào là thua.',
   'Mỗi lần nhảy có một câu hỏi. Đúng được +1 điểm, sai hoặc hết giờ thì không có điểm nhưng vẫn chạy tiếp.',
+  'Nhảy chạm khối năng lượng trên cao để nhận khiên, chậm lại, 50/50, thêm giờ hoặc bất tử.',
   'Đủ số câu đúng sẽ mở thử thách cột mốc. Vượt mốc để mở skin và chứng chỉ.',
 ];
 

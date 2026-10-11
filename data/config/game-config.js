@@ -49,6 +49,37 @@ export const GAME_MODES = {
   },
 };
 
+// Khối năng lượng lơ lửng giữa hai chướng ngại vật, nhảy chạm vào để nhận.
+// chance: xác suất kèm một khối sau mỗi chướng ngại vật; minDistance: khoảng cách tối thiểu giữa hai khối.
+export const POWER_UP_SPAWN = {
+  chance: 0.16,
+  minDistance: 1500,
+};
+
+// weight: tỷ lệ xuất hiện tương đối giữa các loại khối
+export const POWER_UPS = {
+  SHIELD: { id: 'SHIELD', name: 'Khiên bảo vệ', color: '#38bdf8', weight: 30 },
+  SLOW: { id: 'SLOW', name: 'Chậm lại', color: '#a3e635', weight: 25, durationSec: 7, speedFactor: 0.6 },
+  HINT: { id: 'HINT', name: '50/50', color: '#facc15', weight: 20, charges: 2 },
+  TIME: { id: 'TIME', name: '+5 giây', color: '#fb923c', weight: 15, charges: 3, bonusSec: 5 },
+  STAR: { id: 'STAR', name: 'Bất tử', color: '#f472b6', weight: 10, durationSec: 6 },
+};
+
+// Môi trường đặc biệt chỉ thỉnh thoảng xuất hiện: hết mỗi đoạn nền thường (tính theo thời gian chạy)
+// có specialChance khả năng chuyển sang một môi trường đặc biệt, hết thời lượng thì quay về nền thường.
+// Môi trường mới tràn vào từ mép phải cùng tốc độ chạy.
+export const ENVIRONMENT_SCHEDULE = {
+  normalDurationSec: [16, 28],
+  specialChance: 0.5,
+};
+
+export const ENVIRONMENTS = {
+  METEOR_SHOWER: { id: 'METEOR_SHOWER', name: 'Mưa thiên thạch', color: '#fb923c', weight: 25, durationSec: [14, 22] },
+  SHOOTING_STARS: { id: 'SHOOTING_STARS', name: 'Mưa sao băng', color: '#c7d2fe', weight: 30, durationSec: [14, 22] },
+  UNDERSEA: { id: 'UNDERSEA', name: 'Dưới đáy biển', color: '#5eead4', weight: 25, durationSec: [16, 24] },
+  SAKURA: { id: 'SAKURA', name: 'Mưa hoa anh đào', color: '#f9a8d4', weight: 20, durationSec: [14, 22] },
+};
+
 export const DEFAULT_MILESTONE_PASS_RATIO = 0.8;
 
 // Điểm của một lượt = số câu trả lời đúng. Cột mốc tính theo số câu đúng trong lượt;

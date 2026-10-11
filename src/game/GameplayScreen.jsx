@@ -1,16 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { GAME_MODES } from '../../data/config/game-config';
+import { GAME_MODES, POWER_UPS, POWER_UP_SPAWN } from '../../data/config/game-config';
 import { DinoAvatar } from '../skins/DinoAvatar';
 import { PixelBar } from '../ui/PixelBar';
 import { PixelSprite } from '../ui/PixelSprite';
 import { Sheet } from '../ui/Sheet';
 import { SoundSettings } from '../ui/SoundSettings';
 import { padScore } from '../utils/format';
-import { randomRange } from '../utils/random';
+import { pickWeighted, randomRange, shuffleArray } from '../utils/random';
 import { soundFX } from '../utils/sound';
 import { CanvasRenderer } from './canvas-renderer';
+import { EnvironmentManager } from './environment-manager';
 import { MilestoneManager } from './milestone-manager';
-import { DINO_COLS, DINO_ROWS, ICONS, PIXEL, getObstacleSize } from './pixel-art';
+import {
+  DINO_COLS,
+  DINO_ROWS,
+  ICONS,
+  PIXEL,
+  POWER_UP_BLOCK_SIZE,
+  RAINBOW_COLORS,
+  getObstacleSize,
+} from './pixel-art';
 import { QuestionController } from './question-controller';
 
 const VIEW_HEIGHT = 280;
@@ -19,6 +28,30 @@ const DINO_X = 56;
 const DINO_WIDTH = DINO_COLS * PIXEL;
 const DINO_HEIGHT = DINO_ROWS * PIXEL;
 const CLOUD_WIDTH = 48;
+const BLOCK_SIZE = POWER_UP_BLOCK_SIZE * PIXEL;
+// Đủ cao để chạy dưới không chạm, nhảy lên là chạm
+const BLOCK_Y = GROUND_Y - DINO_HEIGHT - 70;
+const POWER_UP_LIST = Object.values(POWER_UPS);
+const SHIELD_BURST = ['#e5e7eb', '#9ca3af', POWER_UPS.SHIELD.color];
+
+// Tác dụng khi nhặt từng loại khối năng lượng
+const POWER_UP_EFFECTS = {
+  SHIELD: (fx) => {
+    fx.shield = true;
+  },
+  SLOW: (fx, cfg) => {
+    fx.slowLeft = cfg.durationSec;
+  },
+  STAR: (fx, cfg) => {
+    fx.starLeft = cfg.durationSec;
+  },
+  HINT: (fx, cfg) => {
+    fx.hintCharges += cfg.charges;
+  },
+  TIME: (fx, cfg) => {
+    fx.timeCharges += cfg.charges;
+  },
+};
 const LOW_TIME_SEC = 3;
 // Khớp biến thể CSS `phone-landscape` trong index.css
 const PHONE_LANDSCAPE_QUERY = '(orientation: landscape) and (max-height: 500px)';
@@ -58,6 +91,7 @@ const ANSWER_STYLES = {
   correct: { '--fill': 'var(--color-leaf-soft)', '--edge': 'var(--color-leaf)' },
   wrong: { '--fill': 'var(--color-berry-soft)', '--edge': 'var(--color-berry)' },
   dim: { opacity: 0.45 },
+  hidden: { opacity: 0.25, textDecoration: 'line-through' },
 };
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -90,7 +124,8 @@ function AnswerButton({ index, text, state, disabled, onSelect }) {
   );
 }
 
-function QuestionCard({ header, question, selectedOption, onSelect }) {
+// hidden: các đáp án sai bị loại bởi khối 50/50
+function QuestionCard({ header, question, selectedOption, onSelect, hidden = [] }) {
   const answered = selectedOption !== null;
 
   return (
@@ -101,8 +136,10 @@ function QuestionCard({ header, question, selectedOption, onSelect }) {
       </p>
       <div className="mt-4 grid gap-[10px] short:grid-cols-2">
         {question.a.map((option, idx) => {
+          const isHidden = hidden.includes(idx);
           let state = 'idle';
-          if (answered) {
+          if (isHidden) state = 'hidden';
+          else if (answered) {
             if (idx === question.c) state = 'correct';
             else if (idx === selectedOption) state = 'wrong';
             else state = 'dim';
@@ -113,7 +150,7 @@ function QuestionCard({ header, question, selectedOption, onSelect }) {
               index={idx}
               text={option}
               state={state}
-              disabled={answered}
+              disabled={answered || isHidden}
               onSelect={onSelect}
             />
           );
@@ -150,6 +187,8 @@ export const GameplayScreen = ({
   const [milestoneSession, setMilestoneSession] = useState(null);
   const [floater, setFloater] = useState(null);
   const [milestoneProgressToast, setMilestoneProgressToast] = useState(null);
+  // Thông báo ngắn khi nhặt khối năng lượng hoặc vào môi trường đặc biệt
+  const [banner, setBanner] = useState(null);
   const [canvasSize, setCanvasSize] = useState({ w: 900, h: 280, cssH: 200 });
 
   useEffect(() => {
@@ -183,11 +222,26 @@ export const GameplayScreen = ({
     { x: 720, y: 30, speedFactor: 0.22 },
   ]);
   const particlesRef = useRef([]);
+  const powerUpsRef = useRef([]);
+  // Quãng đường còn lại trước khi được xuất hiện khối năng lượng tiếp theo (không có ngay đầu lượt)
+  const powerUpCooldownRef = useRef(POWER_UP_SPAWN.minDistance);
+  // slowLeft/starLeft tính bằng giây chạy; hintCharges/timeCharges là số câu hỏi còn được hỗ trợ
+  const effectsRef = useRef({
+    shield: false,
+    slowLeft: 0,
+    starLeft: 0,
+    hintCharges: 0,
+    timeCharges: 0,
+    speedFactor: 1,
+  });
+  const environmentRef = useRef(new EnvironmentManager());
 
   const questionControllerRef = useRef(new QuestionController());
   const milestoneManagerRef = useRef(new MilestoneManager());
   const questionRef = useRef(null);
   const timeRemainingRef = useRef(timeLimit);
+  // Thời gian của câu hỏi hiện tại (có thể cộng thêm nhờ khối +5 giây)
+  const questionLimitRef = useRef(timeLimit);
   // Cú nhảy đang chờ thực hiện khi thử thách cột mốc chen vào giữa
   const pendingJumpRef = useRef(false);
   const milestoneRef = useRef(null);
@@ -195,6 +249,7 @@ export const GameplayScreen = ({
   const crashTimerRef = useRef(null);
   const progressToastTimerRef = useRef(null);
   const milestoneTimerRef = useRef(null);
+  const bannerTimerRef = useRef(null);
   const onGameOverRef = useRef(onGameOver);
   onGameOverRef.current = onGameOver;
 
@@ -240,6 +295,17 @@ export const GameplayScreen = ({
     }
   }, []);
 
+  const showBanner = useCallback((text, color) => {
+    setBanner({ id: Date.now(), text, color });
+    if (bannerTimerRef.current !== null) {
+      window.clearTimeout(bannerTimerRef.current);
+    }
+    bannerTimerRef.current = window.setTimeout(() => {
+      bannerTimerRef.current = null;
+      setBanner(null);
+    }, 1800);
+  }, []);
+
   const updateSubState = useCallback((next) => {
     subStateRef.current = next;
     setSubState(next);
@@ -251,6 +317,7 @@ export const GameplayScreen = ({
       crashTimerRef,
       progressToastTimerRef,
       milestoneTimerRef,
+      bannerTimerRef,
     ]) {
       if (timerRef.current !== null) {
         window.clearTimeout(timerRef.current);
@@ -303,9 +370,24 @@ export const GameplayScreen = ({
       return;
     }
 
-    const newQuestion = { question: qInstance.question, selectedOption: null };
+    const { question } = qInstance;
+    const fx = effectsRef.current;
+    let hidden = [];
+    if (fx.hintCharges > 0) {
+      fx.hintCharges -= 1;
+      const wrongIndices = question.a.map((_, i) => i).filter((i) => i !== question.c);
+      hidden = shuffleArray(wrongIndices).slice(0, 2);
+    }
+    let limit = timeLimit;
+    if (fx.timeCharges > 0) {
+      fx.timeCharges -= 1;
+      limit += POWER_UPS.TIME.bonusSec;
+    }
+
+    const newQuestion = { question, selectedOption: null, hidden };
     questionRef.current = newQuestion;
-    timeRemainingRef.current = timeLimit;
+    questionLimitRef.current = limit;
+    timeRemainingRef.current = limit;
     setActiveQuestion(newQuestion);
     updateSubState('QUESTION_ACTIVE');
   }, [performJump, timeLimit, updateSubState]);
@@ -351,6 +433,8 @@ export const GameplayScreen = ({
       if (subStateRef.current !== 'QUESTION_ACTIVE') return;
       const currentQ = questionRef.current;
       if (!currentQ || currentQ.selectedOption !== null) return;
+      // Phím tắt không chọn được đáp án đã bị loại bởi 50/50
+      if (currentQ.hidden.includes(optionIndex)) return;
 
       const isCorrect = optionIndex === currentQ.question.c;
       totalQuestionsRef.current += 1;
@@ -560,25 +644,38 @@ export const GameplayScreen = ({
       const allowed = modeConfig.allowedObstacleTypes;
       const chosenType = allowed[Math.floor(Math.random() * allowed.length)];
       const { width, height } = getObstacleSize(chosenType);
+      const x = viewRef.current.width + 40;
+      const gap = randomRange(modeConfig.obstacleMinGap, modeConfig.obstacleMaxGap);
 
       obstaclesRef.current.push({
         type: chosenType,
-        x: viewRef.current.width + 40,
+        x,
         // Thằn lằn bay ở tầm trung nên vẫn phải nhảy qua
         y: chosenType === 'PTERODACTYL' ? GROUND_Y - 58 : GROUND_Y - height,
         width,
         height,
         wingPhase: 0,
       });
-      nextObstacleDistanceRef.current = randomRange(
-        modeConfig.obstacleMinGap,
-        modeConfig.obstacleMaxGap
-      );
+      nextObstacleDistanceRef.current = gap;
+
+      // Khối năng lượng lơ lửng giữa chướng ngại vật này và cái tiếp theo
+      if (powerUpCooldownRef.current <= 0 && Math.random() < POWER_UP_SPAWN.chance) {
+        powerUpsRef.current.push({
+          type: pickWeighted(POWER_UP_LIST).id,
+          x: x + (width + gap - BLOCK_SIZE) / 2,
+          y: BLOCK_Y,
+          width: BLOCK_SIZE,
+          height: BLOCK_SIZE,
+        });
+        powerUpCooldownRef.current = POWER_UP_SPAWN.minDistance;
+      }
     };
 
     const spawnTrailParticle = () => {
-      if (skin.visual.trailStyle === 'NONE') return;
-      if (Math.random() > 0.35) return;
+      // Khi bất tử luôn có vệt cầu vồng, kể cả lúc đang nhảy
+      const starred = effectsRef.current.starLeft > 0;
+      if (!starred && (isJumpingRef.current || skin.visual.trailStyle === 'NONE')) return;
+      if (Math.random() > (starred ? 0.9 : 0.35)) return;
 
       particlesRef.current.push({
         x: DINO_X + 6,
@@ -587,8 +684,33 @@ export const GameplayScreen = ({
         vy: -randomRange(10, 45),
         size: PIXEL,
         alpha: 0.85,
-        color: TRAIL_COLORS[skin.visual.trailStyle] || '#9ca3af',
+        color: starred
+          ? RAINBOW_COLORS[Math.floor(Math.random() * RAINBOW_COLORS.length)]
+          : TRAIL_COLORS[skin.visual.trailStyle] || '#9ca3af',
       });
+    };
+
+    const spawnBurst = (cx, cy, colors, count) => {
+      for (let i = 0; i < count; i += 1) {
+        particlesRef.current.push({
+          x: cx,
+          y: cy,
+          vx: randomRange(-160, 160),
+          vy: randomRange(-200, 40),
+          size: PIXEL,
+          alpha: 1,
+          color: colors[i % colors.length],
+        });
+      }
+    };
+
+    const collectPowerUp = (block) => {
+      const cfg = POWER_UPS[block.type];
+      block.taken = true;
+      POWER_UP_EFFECTS[block.type](effectsRef.current, cfg);
+      spawnBurst(block.x + block.width / 2, block.y + block.height / 2, [cfg.color, '#ffffff'], 16);
+      soundFX.playPowerUp();
+      showBanner(cfg.name, cfg.color);
     };
 
     // Cập nhật hạt bụi tại chỗ, không tạo mảng mới mỗi khung hình
@@ -604,21 +726,18 @@ export const GameplayScreen = ({
       particles.length = kept;
     };
 
-    const hitsObstacle = (obs) => {
-      const pad = 8;
-      return (
-        DINO_X + DINO_WIDTH - pad > obs.x + pad &&
-        DINO_X + pad < obs.x + obs.width - pad &&
-        dinoYRef.current + DINO_HEIGHT - pad > obs.y + pad &&
-        dinoYRef.current + pad < obs.y + obs.height - pad
-      );
-    };
+    // pad thu nhỏ hitbox để va chạm chướng ngại vật không quá khắt khe
+    const overlapsDino = (rect, pad) =>
+      DINO_X + DINO_WIDTH - pad > rect.x + pad &&
+      DINO_X + pad < rect.x + rect.width - pad &&
+      dinoYRef.current + DINO_HEIGHT - pad > rect.y + pad &&
+      dinoYRef.current + pad < rect.y + rect.height - pad;
 
     // Cập nhật thanh thời gian trực tiếp trên DOM để không render lại React mỗi khung hình
     const renderTimer = (timeLeft) => {
       const low = timeLeft <= LOW_TIME_SEC;
       if (timerFillRef.current) {
-        timerFillRef.current.style.width = `${(timeLeft / timeLimit) * 100}%`;
+        timerFillRef.current.style.width = `${(timeLeft / questionLimitRef.current) * 100}%`;
         timerFillRef.current.style.backgroundColor = low ? 'var(--color-berry)' : 'var(--color-leaf)';
       }
       const label = timerLabelRef.current;
@@ -635,7 +754,15 @@ export const GameplayScreen = ({
         modeConfig.maxSpeed,
         speedRef.current + modeConfig.speedAcceleration * dt
       );
-      const speed = speedRef.current;
+
+      const fx = effectsRef.current;
+      fx.slowLeft = Math.max(0, fx.slowLeft - dt);
+      fx.starLeft = Math.max(0, fx.starLeft - dt);
+      // Giảm/tăng tốc dần để hiệu ứng chậm lại không bị giật
+      const targetFactor = fx.slowLeft > 0 ? POWER_UPS.SLOW.speedFactor : 1;
+      fx.speedFactor += (targetFactor - fx.speedFactor) * Math.min(1, dt * 3);
+
+      const speed = speedRef.current * fx.speedFactor;
       groundOffsetRef.current += speed * dt;
       legPhaseRef.current += dt * (speed * 0.045);
 
@@ -647,8 +774,12 @@ export const GameplayScreen = ({
           dinoVyRef.current = 0;
           isJumpingRef.current = false;
         }
-      } else {
-        spawnTrailParticle();
+      }
+      spawnTrailParticle();
+
+      const startedEnv = environmentRef.current.update(dt, speed, viewRef.current.width, GROUND_Y);
+      if (startedEnv) {
+        showBanner(startedEnv.name, startedEnv.color);
       }
 
       for (const cloud of cloudsRef.current) {
@@ -662,23 +793,44 @@ export const GameplayScreen = ({
       updateParticles(dt);
 
       nextObstacleDistanceRef.current -= speed * dt;
+      powerUpCooldownRef.current -= speed * dt;
       if (nextObstacleDistanceRef.current <= 0) {
         spawnObstacle();
       }
 
+      for (const block of powerUpsRef.current) {
+        block.x -= speed * dt;
+        if (overlapsDino(block, 0)) collectPowerUp(block);
+      }
+      powerUpsRef.current = powerUpsRef.current.filter(
+        (block) => !block.taken && block.x + block.width > -40
+      );
+
       for (const obs of obstaclesRef.current) {
         obs.x -= speed * dt;
         obs.wingPhase += dt * 10;
-        if (hitsObstacle(obs)) {
-          isCollidedRef.current = true;
-          soundFX.playWrong();
-          updateSubState('CRASHING');
-          crashTimerRef.current = window.setTimeout(finishGameRun, 1100);
-          return;
+        if (!overlapsDino(obs, 8)) continue;
+
+        // Bất tử hoặc khiên phá vỡ chướng ngại vật thay vì thua; khiên chỉ dùng được một lần
+        if (fx.starLeft > 0 || fx.shield) {
+          const colors = fx.starLeft > 0 ? RAINBOW_COLORS : SHIELD_BURST;
+          if (fx.starLeft <= 0) fx.shield = false;
+          obs.smashed = true;
+          spawnBurst(obs.x + obs.width / 2, obs.y + obs.height / 2, colors, 14);
+          soundFX.playShieldBreak();
+          continue;
         }
+
+        isCollidedRef.current = true;
+        soundFX.playWrong();
+        updateSubState('CRASHING');
+        crashTimerRef.current = window.setTimeout(finishGameRun, 1100);
+        return;
       }
 
-      obstaclesRef.current = obstaclesRef.current.filter((obs) => obs.x + obs.width > -40);
+      obstaclesRef.current = obstaclesRef.current.filter(
+        (obs) => !obs.smashed && obs.x + obs.width > -40
+      );
     };
 
     const step = (now) => {
@@ -719,6 +871,9 @@ export const GameplayScreen = ({
           obstacles: obstaclesRef.current,
           clouds: cloudsRef.current,
           particles: particlesRef.current,
+          environment: environmentRef.current,
+          powerUps: powerUpsRef.current,
+          effects: effectsRef.current,
           thinking: state === 'QUESTION_ACTIVE' || state === 'QUESTION_FEEDBACK',
           night: state.startsWith('MILESTONE'),
           time: now,
@@ -736,7 +891,7 @@ export const GameplayScreen = ({
       }
       clearTimers();
     };
-  }, [clearTimers, finishGameRun, handleJumpAnswer, modeConfig, skin, timeLimit, updateSubState]);
+  }, [clearTimers, finishGameRun, handleJumpAnswer, modeConfig, showBanner, skin, timeLimit, updateSubState]);
 
   // Chạm bất kỳ đâu (trừ nút bấm) để bắt đầu hoặc nhảy
   const handleScreenPointer = (e) => {
@@ -832,6 +987,16 @@ export const GameplayScreen = ({
             </p>
           )}
 
+          {banner && (
+            <p
+              key={banner.id}
+              className="pixel-box pointer-events-none absolute left-1/2 top-14 -translate-x-1/2 whitespace-nowrap px-3 py-1 font-pixel text-[20px] font-bold text-[#2b2b2b] animate-pop"
+              style={{ '--fill': banner.color }}
+            >
+              {banner.text}
+            </p>
+          )}
+
           {subState === 'CRASHING' && (
             <p className="pointer-events-none absolute inset-x-0 top-[22%] text-center font-pixel text-[40px] font-extrabold tracking-[0.3em] text-ink">
               GAME OVER
@@ -885,11 +1050,12 @@ export const GameplayScreen = ({
               <QuestionCard
                 question={activeQuestion.question}
                 selectedOption={activeQuestion.selectedOption}
+                hidden={activeQuestion.hidden}
                 onSelect={handleJumpAnswer}
                 header={
                   <div className="flex items-center gap-3">
                     <PixelBar
-                      value={timeRemainingRef.current / timeLimit}
+                      value={timeRemainingRef.current / questionLimitRef.current}
                       color={timeLow ? 'var(--color-berry)' : 'var(--color-leaf)'}
                       label="Thời gian còn lại"
                       className="h-3 flex-1"

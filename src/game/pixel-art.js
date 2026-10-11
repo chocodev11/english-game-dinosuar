@@ -354,6 +354,149 @@ export const BUBBLE_SPRITE = [
   '.....o.....',
 ];
 
+// --- Môi trường đặc biệt (nét doodle một màu như mây) ---
+
+// Đá rơi xiên xuống trái, ba vệt tốc độ kéo lên phải
+export const METEOR_SPRITE = [
+  '.....o..o..o',
+  '....o..o..o.',
+  '...o..o..o..',
+  '.....o......',
+  '....o..o....',
+  '.oo...o.....',
+  'oooo.o......',
+  'oooo........',
+  '.oo.........',
+];
+
+// Ngôi sao chữ thập kéo vệt mảnh, thưa dần về cuối
+export const SHOOTING_STAR_SPRITE = [
+  '...............o.o.',
+  '..........ooo.o....',
+  '.o....oooo.........',
+  'oooooo.............',
+  '.o.................',
+];
+
+// Một nhịp sóng mặt nước, ghép nối tiếp thành đường gợn liền
+export const WAVE_SPRITE = ['...oooo.....', '.oo....oo...', 'o........ooo'];
+
+export const FISH_SPRITE = [
+  '..oooo....',
+  '.o....o..o',
+  'o.o....oo.',
+  '.o....o..o',
+  '..oooo....',
+];
+
+export const SEA_BUBBLE_SPRITE = ['.oo.', 'o..o', 'o..o', '.oo.'];
+
+// Hai khung cánh hoa lật qua lại khi rơi
+export const PETAL_FRAMES = [
+  ['oo.', 'ooo', '.oo'],
+  ['.oo', 'ooo', 'oo.'],
+];
+
+export const RAINBOW_COLORS = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#38bdf8', '#a78bfa'];
+
+// --- Khối năng lượng (power-up) ---
+
+export const POWER_UP_BLOCK_SIZE = 12;
+const BLOCK_EDGE = '#2b2b2b';
+
+// Biểu tượng 8x8 vẽ giữa khối năng lượng và trên HUD
+export const POWER_UP_ICONS = {
+  SHIELD: [
+    'xxxxxxxx',
+    'x.xxxxxx',
+    'x.xxxxxx',
+    'xxxxxxxx',
+    '.xxxxxx.',
+    '.xxxxxx.',
+    '..xxxx..',
+    '...xx...',
+  ],
+  SLOW: [
+    '..xxxx..',
+    '.x....x.',
+    'x...x..x',
+    'x...x..x',
+    'x...xxxx',
+    'x......x',
+    '.x....x.',
+    '..xxxx..',
+  ],
+  HINT: [
+    '..xxxx..',
+    '.x....x.',
+    'x..x...x',
+    'x.x....x',
+    '.x....x.',
+    '..xxxx..',
+    '..xxxx..',
+    '...xx...',
+  ],
+  TIME: [
+    'xxxxxxxx',
+    '.x....x.',
+    '..xxxx..',
+    '...xx...',
+    '...xx...',
+    '..x..x..',
+    '.xxxxxx.',
+    'xxxxxxxx',
+  ],
+  STAR: [
+    '...xx...',
+    '...xx...',
+    'xxxxxxxx',
+    '.xxxxxx.',
+    '..xxxx..',
+    '.xxxxxx.',
+    '.xx..xx.',
+    'xx....xx',
+  ],
+};
+
+/** Khối vuông bo góc, viền tối, có vệt sáng và biểu tượng loại năng lượng ở giữa. */
+export function getPowerUpBlockCells(type, color) {
+  const n = POWER_UP_BLOCK_SIZE;
+  const cells = [];
+  for (let y = 0; y < n; y += 1) {
+    for (let x = 0; x < n; x += 1) {
+      const edgeX = x === 0 || x === n - 1;
+      const edgeY = y === 0 || y === n - 1;
+      if (edgeX && edgeY) continue;
+      const shine = (y === 1 && x >= 1 && x <= 3) || (x === 1 && y === 2);
+      let cellColor = color;
+      if (edgeX || edgeY) cellColor = BLOCK_EDGE;
+      else if (shine) cellColor = '#ffffff';
+      cells.push({ x, y, color: cellColor });
+    }
+  }
+  // Biểu tượng vẽ sau nên đè lên nền khối
+  pushRows(cells, POWER_UP_ICONS[type], { x: BLOCK_EDGE }, 2, 2);
+  return cells;
+}
+
+// Bán kính (ô) của vòng khiên quanh khủng long, tâm đặt giữa thân
+export const SHIELD_RING_RADIUS = 13;
+
+/** Vòng tròn pixel dày 1 ô bao quanh khủng long (toạ độ theo khung thân). */
+export function getShieldRingCells(color) {
+  const r = SHIELD_RING_RADIUS;
+  const outer = r * r;
+  const inner = (r - 1) * (r - 1);
+  const cells = [];
+  for (let y = -r; y <= r; y += 1) {
+    for (let x = -r; x <= r; x += 1) {
+      const d = x * x + y * y;
+      if (d <= outer && d > inner) cells.push({ x: x + 9, y: y + 9, color });
+    }
+  }
+  return cells;
+}
+
 /** Kích thước chướng ngại vật theo đơn vị logic Canvas (khớp hitbox với hình vẽ). */
 export function getObstacleSize(type) {
   const rows = type === 'PTERODACTYL' ? PTERO_FRAMES[0] : OBSTACLE_SPRITES[type];

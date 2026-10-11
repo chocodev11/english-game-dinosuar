@@ -20,6 +20,20 @@ export function randomRange(min, max) {
 }
 
 /**
+ * Chọn ngẫu nhiên một phần tử theo trọng số `weight` của từng phần tử.
+ */
+export function pickWeighted(items) {
+  let total = 0;
+  for (const item of items) total += item.weight;
+  let roll = Math.random() * total;
+  for (const item of items) {
+    roll -= item.weight;
+    if (roll < 0) return item;
+  }
+  return items[items.length - 1];
+}
+
+/**
  * Sinh mã định danh nội bộ ngắn gọn (dùng cho mã người chơi nội bộ hoặc mã chứng chỉ).
  */
 export function generateInternalId(prefix) {

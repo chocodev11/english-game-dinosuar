@@ -324,6 +324,34 @@ class SoundController {
     });
   }
 
+  // Arpeggio đi lên kiểu nhặt vật phẩm 8-bit
+  playPowerUp() {
+    const ctx = this.getSfxContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [392, 523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+      this.playTone(this.sfxBus, 'square', freq, now + idx * 0.05, 0.09, 0.06);
+    });
+  }
+
+  // Tiếng vỡ khi khiên/bất tử phá chướng ngại vật
+  playShieldBreak() {
+    const ctx = this.getSfxContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+    osc.connect(gain);
+    gain.connect(this.sfxBus);
+    osc.start(now);
+    osc.stop(now + 0.24);
+  }
+
   playClick() {
     const ctx = this.getSfxContext();
     if (!ctx) return;
