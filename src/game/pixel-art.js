@@ -339,19 +339,62 @@ export const MOON_SPRITE = [
 
 export const STAR_SPRITE = ['.o.', 'ooo', '.o.'];
 
-export const BUBBLE_SPRITE = [
-  '.ooooooooo.',
-  'o.........o',
-  'o...qqq...o',
-  'o..q...q..o',
-  'o......q..o',
-  'o.....q...o',
-  'o....q....o',
-  'o.........o',
-  'o....q....o',
-  'o.........o',
-  '.oooo.oooo.',
-  '.....o.....',
+// Bong bóng trên đầu khủng long: đang hỏi, trả lời đúng, trả lời sai
+export const BUBBLE_SPRITES = {
+  ask: [
+    '.ooooooooo.',
+    'o.........o',
+    'o...qqq...o',
+    'o..q...q..o',
+    'o......q..o',
+    'o.....q...o',
+    'o....q....o',
+    'o.........o',
+    'o....q....o',
+    'o.........o',
+    '.oooo.oooo.',
+    '.....o.....',
+  ],
+  correct: [
+    '.ooooooooo.',
+    'o.........o',
+    'o.........o',
+    'o.......q.o',
+    'o......qq.o',
+    'o.q...qq..o',
+    'o.qq.qq...o',
+    'o..qqq....o',
+    'o...q.....o',
+    'o.........o',
+    '.oooo.oooo.',
+    '.....o.....',
+  ],
+  wrong: [
+    '.ooooooooo.',
+    'o.........o',
+    'o.........o',
+    'o.qq...qq.o',
+    'o..qq.qq..o',
+    'o...qqq...o',
+    'o..qq.qq..o',
+    'o.qq...qq.o',
+    'o.........o',
+    'o.........o',
+    '.oooo.oooo.',
+    '.....o.....',
+  ],
+};
+
+// Đường viền đồi cát phía xa, chân đồi nằm trên đường chân trời
+export const HILL_SPRITE = [
+  '................oooooo..................',
+  '.............ooo......oo................',
+  '...........oo...........oo..............',
+  '.........oo...............ooo...........',
+  '.......oo....................oo.........',
+  '.....oo........................ooo......',
+  '...oo.............................oo....',
+  'ooo.................................oooo',
 ];
 
 // --- Môi trường đặc biệt (nét doodle một màu như mây) ---

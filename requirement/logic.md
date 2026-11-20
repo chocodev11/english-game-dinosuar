@@ -23,6 +23,7 @@
 - Khủng long chạy liên tục trên HTML5 Canvas (`requestAnimationFrame` kết hợp `delta time`).
 - Người chơi chạm màn hình (hoặc Space/↑) để nhảy bất kỳ lúc nào khi đang chạy trên mặt đất.
 - Mỗi lần nhảy, game dừng lại và hiện một câu hỏi Tiếng Anh 10 (`{ q: string, a: string[], c: number }`). Cú nhảy chỉ diễn ra sau khi trả lời, nên thời điểm nhảy giữ nguyên như lúc chạm.
+  - Câu hỏi theo các dạng bài của đề kiểm tra (phát âm, trọng âm, từ vựng, ngữ pháp, đồng nghĩa/trái nghĩa, tìm lỗi sai, giao tiếp); câu lệnh dùng chung nằm trong `data/question-formats.js`. Trong `q` và `a`, phần đặt trong `{…}` được gạch chân và ký tự xuống dòng tách câu lệnh với câu đề.
   - **Trả lời đúng**: +1 điểm.
   - **Trả lời sai hoặc hết thời gian**: không có điểm, hiện đáp án đúng; khủng long vẫn nhảy và chạy tiếp.
 - Chỉ thua (`GAME_OVER`) khi khủng long đâm vào chướng ngại vật (xương rồng, đá, thằn lằn bay).

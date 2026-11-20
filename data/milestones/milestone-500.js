@@ -1,7 +1,9 @@
+import { Q_CLOSEST, Q_COMBINE, Q_MISTAKE, Q_REWRITE, Q_SOUND } from '../question-formats.js';
+
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc 500 điểm (20 câu hỏi/lượt, cần đạt tối thiểu 80% = 16/20 câu).
  * Bám sát chương trình Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5.
- * Mỗi Unit 5 câu: 2 từ vựng, 2 ngữ pháp, 1 phát âm.
+ * Mỗi Unit 6 câu: 2 từ vựng, 2 ngữ pháp, 1 phát âm, 1 dạng bài đề kiểm tra (giao tiếp, viết lại câu, nối câu, tìm lỗi sai, đồng nghĩa).
  */
 export const MILESTONE_500_QUESTIONS = [
   // Unit 1: Family Life
@@ -26,9 +28,14 @@ export const MILESTONE_500_QUESTIONS = [
     c: 0,
   },
   {
-    q: 'Which word contains the consonant blend /kr/?',
-    a: ['chores', 'cleaning', 'grocery', 'crowded'],
-    c: 3,
+    q: Q_SOUND,
+    a: ['{c}rowded', '{c}ream', '{c}ity', '{c}lean'],
+    c: 2,
+  },
+  {
+    q: 'Nam: "I think boys shouldn’t do housework."\nLan: "______ Everyone in the family should share it."',
+    a: ['I totally agree.', 'I’m afraid I disagree.', 'That’s a good idea.', 'You’re right.'],
+    c: 1,
   },
 
   // Unit 2: Humans and the Environment
@@ -53,9 +60,19 @@ export const MILESTONE_500_QUESTIONS = [
     c: 0,
   },
   {
-    q: 'Which word does NOT begin with the sound /gr/?',
-    a: ['green', 'grow', 'ground', 'protect'],
-    c: 3,
+    q: Q_SOUND,
+    a: ['cl{ea}n', 'pl{ea}se', 'gr{ea}t', 'incr{ea}se'],
+    c: 2,
+  },
+  {
+    q: `${Q_REWRITE}Students planted 100 trees last week.`,
+    a: [
+      '100 trees are planted by students last week.',
+      'Students were planted 100 trees last week.',
+      '100 trees were planted by students last week.',
+      '100 trees planted students last week.',
+    ],
+    c: 2,
   },
 
   // Unit 3: Music
@@ -84,6 +101,16 @@ export const MILESTONE_500_QUESTIONS = [
     a: ['talent', 'guitar', 'programme', 'artist'],
     c: 1,
   },
+  {
+    q: `${Q_COMBINE}She loves singing. She can’t play any instruments.`,
+    a: [
+      'She loves singing, so she can’t play any instruments.',
+      'She loves singing, or she can’t play any instruments.',
+      'She loves singing, for she can’t play any instruments.',
+      'She loves singing, but she can’t play any instruments.',
+    ],
+    c: 3,
+  },
 
   // Unit 4: For a Better Community
   {
@@ -111,6 +138,11 @@ export const MILESTONE_500_QUESTIONS = [
     a: ['a world record', 'a record shop', 'to record a song', 'a school record'],
     c: 2,
   },
+  {
+    q: `${Q_MISTAKE}Last summer, we {volunteer} {at} a hospital {and} {met} many kind people.`,
+    a: ['volunteer', 'at', 'and', 'met'],
+    c: 0,
+  },
 
   // Unit 5: Inventions
   {
@@ -137,5 +169,10 @@ export const MILESTONE_500_QUESTIONS = [
     q: 'Choose the word that has a different stress pattern from the others.',
     a: ['invention', 'inventor', 'connection', 'telephone'],
     c: 3,
+  },
+  {
+    q: `${Q_CLOSEST}Laptops are {portable}, so students can take them to class.`,
+    a: ['hard to use', 'easy to carry', 'cheap to buy', 'quick to charge'],
+    c: 1,
   },
 ];

@@ -96,6 +96,18 @@ const ANSWER_STYLES = {
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+// Phần đặt trong {…} của câu hỏi/đáp án được gạch chân như trong đề kiểm tra
+const renderMarked = (text) =>
+  text.split(/\{([^}]*)\}/).map((part, i) =>
+    i % 2 ? (
+      <u key={i} className="decoration-2 underline-offset-4">
+        {part}
+      </u>
+    ) : (
+      part
+    )
+  );
+
 function AnswerButton({ index, text, state, disabled, onSelect }) {
   return (
     <button
@@ -113,7 +125,9 @@ function AnswerButton({ index, text, state, disabled, onSelect }) {
       >
         {LETTERS[index]}
       </span>
-      <span className="flex-1 text-[16px] font-medium leading-snug text-text">{text}</span>
+      <span className="flex-1 text-[16px] font-medium leading-snug text-text">
+        {renderMarked(text)}
+      </span>
       {state === 'correct' && (
         <PixelSprite rows={ICONS.check} size={18} color="var(--color-leaf-deep)" label="Đáp án đúng" />
       )}
@@ -131,8 +145,8 @@ function QuestionCard({ header, question, selectedOption, onSelect, hidden = [] 
   return (
     <div>
       {header}
-      <p className="mt-3 text-[18px] font-semibold leading-snug text-text short:text-[17px]">
-        {question.q}
+      <p className="mt-3 whitespace-pre-line text-[18px] font-semibold leading-snug text-text short:text-[17px]">
+        {renderMarked(question.q)}
       </p>
       <div className="mt-4 grid gap-[10px] short:grid-cols-2">
         {question.a.map((option, idx) => {
@@ -850,6 +864,14 @@ export const GameplayScreen = ({
         }
       }
 
+      // Bong bóng trên đầu khủng long: "?" khi đang hỏi, dấu đúng/sai khi vừa trả lời
+      let bubble = null;
+      if (state === 'QUESTION_ACTIVE') bubble = 'ask';
+      else if (state === 'QUESTION_FEEDBACK' && questionRef.current) {
+        const { question, selectedOption } = questionRef.current;
+        bubble = selectedOption === question.c ? 'correct' : 'wrong';
+      }
+
       const ctx = canvasRef.current?.getContext('2d');
       if (ctx) {
         const { width: viewWidth, scale } = viewRef.current;
@@ -874,7 +896,7 @@ export const GameplayScreen = ({
           environment: environmentRef.current,
           powerUps: powerUpsRef.current,
           effects: effectsRef.current,
-          thinking: state === 'QUESTION_ACTIVE' || state === 'QUESTION_FEEDBACK',
+          bubble,
           night: state.startsWith('MILESTONE'),
           time: now,
         });

@@ -1,7 +1,9 @@
+import { Q_CLOSEST, Q_MISTAKE, Q_OPPOSITE, Q_REWRITE, Q_SOUND } from '../question-formats.js';
+
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc từ 2.000 điểm trở lên (50 câu hỏi/lượt, cần đạt tối thiểu 80% = 40/50 câu).
  * Bám sát chương trình Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5 ở mức khó hơn.
- * Mỗi Unit 11 câu: 4 từ vựng, 5 ngữ pháp, 2 phát âm.
+ * Mỗi Unit 13 câu: 4 từ vựng, 5 ngữ pháp, 2 phát âm, 2 dạng bài đề kiểm tra (tìm lỗi sai, giao tiếp, viết lại câu, đồng nghĩa/trái nghĩa).
  */
 export const MILESTONE_2000_QUESTIONS = [
   // Unit 1: Family Life
@@ -51,14 +53,29 @@ export const MILESTONE_2000_QUESTIONS = [
     c: 1,
   },
   {
-    q: 'Which word begins with the same consonant blend as "breadwinner"?',
-    a: ['crowd', 'tray', 'bright', 'dream'],
+    q: Q_SOUND,
+    a: ['{h}ousework', '{h}usband', '{h}onest', '{h}eavy'],
     c: 2,
   },
   {
-    q: 'Which word begins with the same consonant blend as "crowd"?',
-    a: ['chores', 'cleaning', 'grocery', 'Christmas'],
+    q: Q_SOUND,
+    a: ['h{ou}sework', 'h{ou}sehold', 'ab{ou}t', 'r{ou}tine'],
     c: 3,
+  },
+  {
+    q: `${Q_MISTAKE}My father {is} the breadwinner, {so} he {is going} {to work} every day.`,
+    a: ['is', 'so', 'is going', 'to work'],
+    c: 2,
+  },
+  {
+    q: 'Minh: "In my opinion, sharing housework makes families closer."\nAn: "______ It also teaches children responsibility."',
+    a: [
+      'I couldn’t agree more.',
+      'I don’t think so.',
+      'That’s not true.',
+      'I’m not sure about that.',
+    ],
+    c: 0,
   },
 
   // Unit 2: Humans and the Environment
@@ -108,14 +125,29 @@ export const MILESTONE_2000_QUESTIONS = [
     c: 0,
   },
   {
-    q: 'Which word has a different consonant blend at the beginning?',
-    a: ['clean', 'plastic', 'climate', 'cloth'],
+    q: Q_SOUND,
+    a: ['bottle{s}', 'plant{s}', 'bag{s}', 'tree{s}'],
     c: 1,
   },
   {
-    q: 'Which word begins with the sound /gr/?',
-    a: ['garbage', 'glass', 'greenhouse', 'garden'],
+    q: Q_SOUND,
+    a: ['{ch}arity', '{ch}ange', '{ch}emical', '{ch}oose'],
     c: 2,
+  },
+  {
+    q: `${Q_REWRITE}People throw away tons of plastic every day.`,
+    a: [
+      'Tons of plastic is throwing away every day.',
+      'Tons of plastic were thrown away every day.',
+      'Tons of plastic throw away every day.',
+      'Tons of plastic are thrown away every day.',
+    ],
+    c: 3,
+  },
+  {
+    q: `${Q_OPPOSITE}Cars {release} harmful gases into the air.`,
+    a: ['produce', 'absorb', 'send', 'create'],
+    c: 1,
   },
 
   // Unit 3: Music
@@ -174,6 +206,21 @@ export const MILESTONE_2000_QUESTIONS = [
     a: ['lyrics', 'career', 'rapper', 'drummer'],
     c: 1,
   },
+  {
+    q: `${Q_REWRITE}The tickets were sold out, so we watched the show online.`,
+    a: [
+      'We watched the show online, so the tickets were sold out.',
+      'The tickets were sold out, or we watched the show online.',
+      'We watched the show online because the tickets were sold out.',
+      'We watched the show online, but the tickets weren’t sold out.',
+    ],
+    c: 2,
+  },
+  {
+    q: `${Q_CLOSEST}The band will {release} a new album soon.`,
+    a: ['bring out', 'put off', 'take off', 'turn down'],
+    c: 0,
+  },
 
   // Unit 4: For a Better Community
   {
@@ -231,6 +278,21 @@ export const MILESTONE_2000_QUESTIONS = [
     a: ['a conflict', 'to object', 'to permit', 'to record'],
     c: 0,
   },
+  {
+    q: `${Q_MISTAKE}I {was meeting} my best friend {while} I {was volunteering} {at} an animal shelter.`,
+    a: ['was meeting', 'while', 'was volunteering', 'at'],
+    c: 0,
+  },
+  {
+    q: `${Q_REWRITE}During our visit to the orphanage, it started to rain.`,
+    a: [
+      'While it was starting to rain, we visited the orphanage.',
+      'While we were visiting the orphanage, it started to rain.',
+      'We visited the orphanage after it started to rain.',
+      'It started to rain before we visited the orphanage.',
+    ],
+    c: 1,
+  },
 
   // Unit 5: Inventions
   {
@@ -287,5 +349,20 @@ export const MILESTONE_2000_QUESTIONS = [
     q: 'Choose the word that has a different stress pattern from the others.',
     a: ['microphone', 'telescope', 'customer', 'inventor'],
     c: 3,
+  },
+  {
+    q: `${Q_REWRITE}This is the first time I have used a 3D printer.`,
+    a: [
+      'I have used a 3D printer many times.',
+      'I used a 3D printer a long time ago.',
+      'I didn’t use a 3D printer anymore.',
+      'I have never used a 3D printer before.',
+    ],
+    c: 3,
+  },
+  {
+    q: `${Q_MISTAKE}Robots {have done} many dangerous jobs for humans {since} they {have been} {invented}.`,
+    a: ['have done', 'since', 'have been', 'invented'],
+    c: 2,
   },
 ];

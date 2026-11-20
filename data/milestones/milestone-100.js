@@ -1,7 +1,9 @@
+import { Q_MISTAKE, Q_OPPOSITE, Q_STRESS } from '../question-formats.js';
+
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc 100 điểm (5 câu hỏi/lượt, cần đúng ít nhất 4/5 câu).
  * Bám sát Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5 ở mức dễ.
- * Mỗi Unit 2 câu: 1 từ vựng, 1 ngữ pháp.
+ * Mỗi Unit 3 câu: 1 từ vựng, 1 ngữ pháp, 1 dạng bài đề kiểm tra (tìm lỗi sai, giao tiếp, trọng âm, trái nghĩa).
  */
 export const MILESTONE_100_QUESTIONS = [
   // Unit 1: Family Life
@@ -15,6 +17,11 @@ export const MILESTONE_100_QUESTIONS = [
     a: ['cook', 'cooks', 'is cooking', 'cooking'],
     c: 1,
   },
+  {
+    q: `${Q_MISTAKE}My father {cook} {breakfast} {for} us {every} morning.`,
+    a: ['cook', 'breakfast', 'for', 'every'],
+    c: 0,
+  },
 
   // Unit 2: Humans and the Environment
   {
@@ -27,6 +34,11 @@ export const MILESTONE_100_QUESTIONS = [
     a: ['is going to', 'will', 'was going to', 'would'],
     c: 0,
   },
+  {
+    q: 'Nam: "The beach is full of rubbish. What should we do?"\nMai: "______"',
+    a: ['Yes, we are.', 'I think we should clean it up.', 'No, it isn’t.', 'You’re welcome.'],
+    c: 1,
+  },
 
   // Unit 3: Music
   {
@@ -37,6 +49,11 @@ export const MILESTONE_100_QUESTIONS = [
   {
     q: 'He wanted to attend the live concert, ______ all the tickets were sold out.',
     a: ['so', 'and', 'but', 'or'],
+    c: 2,
+  },
+  {
+    q: Q_STRESS,
+    a: ['singer', 'music', 'guitar', 'concert'],
     c: 2,
   },
 
@@ -51,6 +68,11 @@ export const MILESTONE_100_QUESTIONS = [
     a: ['played', 'play', 'are playing', 'were playing'],
     c: 3,
   },
+  {
+    q: `${Q_OPPOSITE}This old map is {useless}; we can’t find the way.`,
+    a: ['careless', 'harmful', 'hopeless', 'useful'],
+    c: 3,
+  },
 
   // Unit 5: Inventions
   {
@@ -62,5 +84,10 @@ export const MILESTONE_100_QUESTIONS = [
     q: 'My grandparents have never ______ a smartphone.',
     a: ['use', 'using', 'used', 'uses'],
     c: 2,
+  },
+  {
+    q: 'Nam: "Can I borrow your charger, please?"\nMai: "______"',
+    a: ['Sure. Here you are.', 'Yes, I am.', 'No, I haven’t.', 'Good luck!'],
+    c: 0,
   },
 ];

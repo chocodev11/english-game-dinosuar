@@ -1,7 +1,9 @@
+import { Q_CLOSEST, Q_COMBINE, Q_MISTAKE, Q_REWRITE, Q_SOUND } from '../question-formats.js';
+
 /**
  * Ngân hàng câu hỏi phụ riêng cho Cột mốc 1.000 điểm (30 câu hỏi/lượt, cần đạt tối thiểu 80% = 24/30 câu).
  * Bám sát chương trình Tiếng Anh 10 Global Success, chỉ gồm nội dung Unit 1 - Unit 5.
- * Mỗi Unit 7 câu: 3 từ vựng, 3 ngữ pháp, 1 phát âm.
+ * Mỗi Unit 8 câu: 3 từ vựng, 3 ngữ pháp, 1 phát âm, 1 dạng bài đề kiểm tra (đồng nghĩa, viết lại câu, tìm lỗi sai, nối câu).
  */
 export const MILESTONE_1000_QUESTIONS = [
   // Unit 1: Family Life
@@ -36,9 +38,14 @@ export const MILESTONE_1000_QUESTIONS = [
     c: 1,
   },
   {
-    q: 'Which word has a different consonant blend at the beginning?',
-    a: ['trip', 'tree', 'bring', 'train'],
-    c: 2,
+    q: Q_SOUND,
+    a: ['tr{ea}t', 'br{ea}k', 'cr{ea}m', 'dr{ea}m'],
+    c: 1,
+  },
+  {
+    q: `${Q_CLOSEST}Family members should {support} each other in difficult times.`,
+    a: ['help', 'blame', 'leave', 'forget'],
+    c: 0,
   },
 
   // Unit 2: Humans and the Environment
@@ -73,8 +80,18 @@ export const MILESTONE_1000_QUESTIONS = [
     c: 3,
   },
   {
-    q: 'Which word begins with the same consonant blend as "protect"?',
-    a: ['planet', 'product', 'pollute', 'clean'],
+    q: Q_SOUND,
+    a: ['pr{o}tect', 'pr{o}blem', 'pr{o}mote', 'pr{o}vide'],
+    c: 1,
+  },
+  {
+    q: `${Q_REWRITE}They will hold the Green Fair next month.`,
+    a: [
+      'The Green Fair will hold next month.',
+      'The Green Fair will be held next month.',
+      'The Green Fair is held next month.',
+      'The Green Fair was held next month.',
+    ],
     c: 1,
   },
 
@@ -114,6 +131,11 @@ export const MILESTONE_1000_QUESTIONS = [
     a: ['famous', 'release', 'attend', 'award'],
     c: 0,
   },
+  {
+    q: `${Q_MISTAKE}My mother wouldn’t let {me} {to stay} up late {to watch} the music {show}.`,
+    a: ['me', 'to stay', 'to watch', 'show'],
+    c: 1,
+  },
 
   // Unit 4: For a Better Community
   {
@@ -151,6 +173,16 @@ export const MILESTONE_1000_QUESTIONS = [
     a: ['to present an award', 'to present the news', 'to present a report', 'a birthday present'],
     c: 3,
   },
+  {
+    q: `${Q_COMBINE}I was walking home. I saw a lost child.`,
+    a: [
+      'While I saw a lost child, I walked home.',
+      'I was walking home when I was seeing a lost child.',
+      'While I was walking home, I saw a lost child.',
+      'When I walked home, I was seeing a lost child.',
+    ],
+    c: 2,
+  },
 
   // Unit 5: Inventions
   {
@@ -187,5 +219,15 @@ export const MILESTONE_1000_QUESTIONS = [
     q: 'Choose the word that has a different stress pattern from the others.',
     a: ['energy', 'benefit', 'importance', 'radio'],
     c: 2,
+  },
+  {
+    q: `${Q_REWRITE}I started using this phone two years ago.`,
+    a: [
+      'I have used this phone since two years.',
+      'I used this phone for two years ago.',
+      'I didn’t use this phone two years ago.',
+      'I have used this phone for two years.',
+    ],
+    c: 3,
   },
 ];

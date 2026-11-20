@@ -1,10 +1,11 @@
 import { POWER_UPS } from '../../data/config/game-config.js';
 import { TRANSITION_BAND, TRANSITION_TILE } from './environment-manager.js';
 import {
-  BUBBLE_SPRITE,
+  BUBBLE_SPRITES,
   CLOUD_SPRITE,
   DINO_FRAME,
   FISH_SPRITE,
+  HILL_SPRITE,
   METEOR_SPRITE,
   MOON_SPRITE,
   OBSTACLE_SPRITES,
@@ -80,7 +81,7 @@ const NIGHT = {
   moon: '#fde68a',
 };
 
-const BUBBLE_FILL = '#ffcc1a';
+const BUBBLE_FILLS = { ask: '#ffcc1a', correct: '#4ade80', wrong: '#f87171' };
 const BUBBLE_INK = '#2b2b2b';
 
 // Vết sỏi & gờ đất lặp lại mỗi 600 đơn vị: [x, y, rộng]
@@ -103,6 +104,15 @@ const GROUND_BUMPS = [
   [86, 9],
   [318, 6],
   [472, 12],
+];
+
+// Đồi cát phía xa cuộn rất chậm để tạo chiều sâu: [x trong vòng lặp, cỡ ô]
+const HILL_LOOP = 640;
+const HILL_PARALLAX = 0.1;
+const HILLS = [
+  [40, 3],
+  [300, 2],
+  [450, 3],
 ];
 
 const STARS = [
@@ -197,7 +207,7 @@ export class CanvasRenderer {
       environment: env,
       powerUps,
       effects,
-      thinking,
+      bubble,
       night,
       time,
     } = params;
@@ -249,9 +259,9 @@ export class CanvasRenderer {
 
     this.drawDinoEffect(ctx, effects, dinoX, dinoY, time);
 
-    if (thinking) {
+    if (bubble) {
       // Đặt trên khung sprite để không che mũ/phụ kiện của skin
-      this.drawQuestionBubble(ctx, dinoX + dinoWidth / 2, dinoY + DINO_FRAME.y * PIXEL, time);
+      this.drawQuestionBubble(ctx, bubble, dinoX + dinoWidth / 2, dinoY + DINO_FRAME.y * PIXEL, time);
     }
   }
 
@@ -270,6 +280,12 @@ export class CanvasRenderer {
     }
 
     if (pal.cloud) {
+      const hillShift = (groundOffset * HILL_PARALLAX) % HILL_LOOP;
+      for (let base = -hillShift; base < width; base += HILL_LOOP) {
+        for (const [x, cell] of HILLS) {
+          drawMono(ctx, 'hill', HILL_SPRITE, pal.cloud, base + x, groundY - HILL_SPRITE.length * cell, cell);
+        }
+      }
       for (const cloud of clouds) {
         drawMono(ctx, 'cloud', CLOUD_SPRITE, pal.cloud, cloud.x, cloud.y);
       }
@@ -496,16 +512,17 @@ export class CanvasRenderer {
     drawMono(ctx, 'moon', MOON_SPRITE, pal.moon, width - 72, 26);
   }
 
-  // Bong bóng "?" nhấp nhô trên đầu khủng long khi đang trả lời câu hỏi
-  static drawQuestionBubble(ctx, centerX, topY, time) {
-    const w = BUBBLE_SPRITE[0].length * PIXEL;
-    const h = BUBBLE_SPRITE.length * PIXEL;
+  // Bong bóng nhấp nhô trên đầu khủng long: "?" khi đang hỏi, dấu đúng/sai khi vừa trả lời
+  static drawQuestionBubble(ctx, kind, centerX, topY, time) {
+    const rows = BUBBLE_SPRITES[kind];
+    const w = rows[0].length * PIXEL;
+    const h = rows.length * PIXEL;
     const bob = Math.sin(time / 170) > 0 ? 0 : PIXEL;
     const x = Math.round(centerX - w / 2);
     const y = Math.round(topY - h - 6 - bob);
 
-    ctx.fillStyle = BUBBLE_FILL;
+    ctx.fillStyle = BUBBLE_FILLS[kind];
     ctx.fillRect(x + PIXEL, y + PIXEL, w - PIXEL * 2, h - PIXEL * 3);
-    drawMono(ctx, 'bubble', BUBBLE_SPRITE, BUBBLE_INK, x, y);
+    drawMono(ctx, `bubble-${kind}`, rows, BUBBLE_INK, x, y);
   }
 }
