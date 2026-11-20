@@ -8,8 +8,8 @@ import { PixelBar } from '../ui/PixelBar';
 import { PixelSprite } from '../ui/PixelSprite';
 import { shuffleArray } from '../utils/random';
 import { soundFX } from '../utils/sound';
-import { detectPaddles } from './marker-detector';
 import { PaddleGame } from './paddle-game';
+import { PaddleScanner } from './paddle-scanner';
 import { PaddlePrintSheet } from './PaddlePrintSheet';
 
 const LOW_TIME_SEC = 5;
@@ -95,6 +95,8 @@ export function PaddleBuzzerScreen({ onExit }) {
   const [pool] = useState(() => new QuestionController().gameplayPool);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(null);
+  // Độ phân giải và số lần quét mỗi giây, hiện ở màn chuẩn bị để biết máy có theo kịp camera không
+  const [scanInfo, setScanInfo] = useState('');
   // Màn chuẩn bị: bảng camera đang thấy (số mã → đáp án)
   const [seen, setSeen] = useState(() => new Map());
 
@@ -183,7 +185,7 @@ export function PaddleBuzzerScreen({ onExit }) {
     }
   };
 
-  // Mở camera và quét mã mỗi khung hình; nhạc nền tắt để lớp nghe rõ giáo viên đọc đề
+  // Mở camera và quét mã theo từng khung hình camera; nhạc nền tắt để lớp nghe rõ giáo viên đọc đề
   useEffect(() => {
     soundFX.stopBgm();
     if (!navigator.mediaDevices) {
@@ -192,22 +194,37 @@ export function PaddleBuzzerScreen({ onExit }) {
     }
 
     const video = videoRef.current;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const scanner = new PaddleScanner();
     let stream = null;
-    let frameId = null;
     let cancelled = false;
 
-    const scan = () => {
-      frameId = window.requestAnimationFrame(scan);
-      if (video.readyState < video.HAVE_CURRENT_DATA) return;
-      if (canvas.width !== video.videoWidth) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+    // Chờ camera có khung hình mới; trình duyệt không có requestVideoFrameCallback thì theo nhịp vẽ màn hình
+    const nextFrame = () =>
+      new Promise((resolve) => {
+        if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(resolve);
+        else window.requestAnimationFrame(resolve);
+      });
+
+    const scanLoop = async () => {
+      let scans = 0;
+      let countedFrom = performance.now();
+      while (!cancelled) {
+        await nextFrame();
+        if (cancelled || video.readyState < video.HAVE_CURRENT_DATA) continue;
+        // Tính giờ theo lúc chụp khung hình chứ không phải lúc quét xong, để xếp nhanh chậm cho đúng
+        const capturedAt = performance.now();
+        const paddles = await scanner.scan(video);
+        if (cancelled) return;
+        frameHandlerRef.current(paddles, capturedAt);
+
+        scans += 1;
+        if (capturedAt - countedFrom >= 1000) {
+          const perSecond = Math.round((scans * 1000) / (capturedAt - countedFrom));
+          setScanInfo(`${video.videoWidth}×${video.videoHeight}, quét ${perSecond} lần/giây`);
+          scans = 0;
+          countedFrom = capturedAt;
+        }
       }
-      ctx.drawImage(video, 0, 0);
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      frameHandlerRef.current(detectPaddles(frame), performance.now());
     };
 
     navigator.mediaDevices
@@ -223,7 +240,7 @@ export function PaddleBuzzerScreen({ onExit }) {
         stream = opened;
         video.srcObject = opened;
         setCameraReady(true);
-        frameId = window.requestAnimationFrame(scan);
+        scanLoop().catch((err) => setCameraError(`Lỗi khi quét bảng: ${err.message}`));
       })
       .catch((err) => {
         setCameraError(
@@ -235,7 +252,7 @@ export function PaddleBuzzerScreen({ onExit }) {
 
     return () => {
       cancelled = true;
-      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      scanner.close();
       if (stream) stream.getTracks().forEach((track) => track.stop());
       if (document.fullscreenElement) document.exitFullscreen();
     };
@@ -373,6 +390,7 @@ export function PaddleBuzzerScreen({ onExit }) {
                     ? `Camera đang thấy ${seenCount}/${GROUP_COUNT} bảng. Giơ thử từng bảng để kiểm tra.`
                     : 'Đang mở camera…')}
               </p>
+              {scanInfo && <p className="mt-1 text-[13px] text-muted">Camera {scanInfo}.</p>}
               <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-3">
                 {GROUPS.map((group) => (
                   <GroupChip key={group} group={group} {...chipFor(group)} />

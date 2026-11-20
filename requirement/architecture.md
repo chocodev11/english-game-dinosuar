@@ -13,7 +13,7 @@
   - `auth/`: Tách biệt `auth-service.ts` (xử lý hồ sơ Họ tên + Lớp) và `LoginScreen.tsx` (giao diện đăng nhập 2 trường).
   - `game/`: Engine chạy Canvas (`GameplayScreen.tsx`, `canvas-renderer.ts`), bộ điều khiển câu hỏi (`question-controller.ts`) và bộ quản lý cột mốc (`milestone-manager.ts`).
   - `skins/`: Quản lý mở khóa/trang bị (`skin-manager.ts`), vẽ nhân vật (`DinoAvatar.tsx`) và giao diện bộ sưu tập (`SkinCollectionScreen.tsx`).
-  - `paddle/`: Paddle Buzzer, thi theo nhóm bằng bảng bìa có mã vuông. `marker-detector.js` nhận mã qua webcam (thư viện `js-aruco2`), `paddle-game.js` giữ luật chơi, `PaddleBuzzerScreen.jsx` là màn hình và `PaddlePrintSheet.jsx` là bản in bảng.
+  - `paddle/`: Paddle Buzzer, thi theo nhóm bằng bảng bìa có mã vuông. `marker-detector.js` nhận mã trong một mảnh ảnh (thư viện `js-aruco2`), `paddle-scanner.js` cắt khung hình camera cho các worker `paddle-scan.worker.js` quét song song, `paddle-game.js` giữ luật chơi, `PaddleBuzzerScreen.jsx` là màn hình và `PaddlePrintSheet.jsx` là bản in bảng.
   - `leaderboard/`: Xử lý sắp xếp thứ hạng (`leaderboard-service.ts`) và giao diện (`LeaderboardScreen.tsx`).
   - `certificate/`: Kiểm tra điều kiện cấp chứng chỉ, sinh mã chứng chỉ (`certificate-manager.ts`) và giao diện in ấn (`CertificateScreen.tsx`).
   - `services/`: Lớp giao tiếp trung gian (`api-client.ts`, `score-service.ts`, `storage-service.ts`) và `supabase-client.js` kết nối bảng xếp hạng trực tuyến (tự quay về lưu trên máy khi chưa cấu hình).

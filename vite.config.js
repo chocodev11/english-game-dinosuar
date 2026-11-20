@@ -4,7 +4,7 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 // js-aruco2 gắn AR/CV lên `this` ở đầu file (kiểu CommonJS cũ) nên Rolldown không coi đó là export;
-// đổi sang `exports` cho cả bản build lẫn bước gom thư viện của dev server.
+// đổi sang `exports` cho bản build, worker và bước gom thư viện của dev server.
 const jsAruco2Exports = {
   name: 'js-aruco2-exports',
   transform(code, id) {
@@ -17,6 +17,11 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss(), jsAruco2Exports],
     optimizeDeps: {
       rolldownOptions: {plugins: [jsAruco2Exports]},
+    },
+    // Worker quét bảng cũng nạp js-aruco2 nên cần cùng plugin
+    worker: {
+      format: 'es',
+      plugins: () => [jsAruco2Exports],
     },
     resolve: {
       alias: {

@@ -2,6 +2,8 @@ import { PADDLE_BUZZER } from '../../data/config/game-config.js';
 
 // Số lần camera phải thấy cùng một đáp án trước khi chốt, để một khung hình đọc nhầm không thành câu trả lời
 const MIN_SIGHTINGS = 3;
+// Số lần đọc ra đáp án khác liên tiếp thì coi là nhóm đã xoay bảng sang đáp án đó
+const MAX_STRAYS = 2;
 
 /**
  * Luật chơi Paddle Buzzer cho một lượt nhiều câu hỏi.
@@ -77,10 +79,19 @@ export class PaddleGame {
       if (!this.armed.has(group)) continue;
 
       const pending = this.pending.get(group);
-      if (!pending || pending.answer !== answer) {
-        this.pending.set(group, { answer, since: now, count: 1 });
+      if (!pending) {
+        this.pending.set(group, { answer, since: now, count: 1, strays: 0 });
         continue;
       }
+      if (pending.answer !== answer) {
+        // Một lần đọc lệch (bảng ở xa, nhòe) thì bỏ qua; lệch liên tiếp mới coi là nhóm đã xoay bảng
+        pending.strays += 1;
+        if (pending.strays >= MAX_STRAYS) {
+          this.pending.set(group, { answer, since: now, count: 1, strays: 0 });
+        }
+        continue;
+      }
+      pending.strays = 0;
       pending.count += 1;
       if (pending.count >= MIN_SIGHTINGS && now - pending.since >= PADDLE_BUZZER.holdMs) {
         // Tính giờ từ lúc bảng vừa hiện ra, không phải lúc chốt

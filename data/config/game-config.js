@@ -89,10 +89,10 @@ export const PADDLE_BUZZER = {
   correctPoints: 1,
   // Thưởng thêm cho nhóm trả lời đúng sớm nhất
   fastestBonus: 2,
-  // Bảng phải khuất khỏi khung hình chừng này (ms) sau lúc mở trả lời rồi giơ lại mới được tính
-  rearmMs: 400,
+  // Bảng giơ sẵn phải khuất khỏi khung hình chừng này (ms) rồi giơ lại mới được tính
+  rearmMs: 300,
   // Giữ yên một đáp án chừng này (ms) thì chốt
-  holdMs: 400,
+  holdMs: 300,
 };
 
 export const DEFAULT_MILESTONE_PASS_RATIO = 0.8;

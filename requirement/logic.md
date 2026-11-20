@@ -74,6 +74,8 @@
   1. **Đọc đề**: chỉ hiện câu đề, giáo viên đọc to rồi nhấn Space. Máy không tự đọc.
   2. **Trả lời**: chuông kêu, bốn đáp án hiện ra, đồng hồ đếm ngược. Nhóm giơ bảng và giữ yên thì được chốt; đã chốt không đổi được. Bảng giơ sẵn từ lúc đọc đề phải hạ xuống rồi giơ lại. Hết giờ, đủ mọi nhóm hoặc giáo viên chốt sớm thì sang bước 3.
   3. **Công bố**: hiện đáp án đúng và lựa chọn của từng nhóm. Đúng +1 điểm, nhóm đúng và nhanh nhất +2 điểm nữa.
+- Quét bảng: mỗi khung hình camera được cắt thành các dải dọc chồng mép và quét song song trên nhiều worker (số dải theo số nhân của máy), kèm một lượt quét cả khung hình thu nhỏ cho bảng đứng sát máy. Kết quả của một khung hình được gộp rồi mới dùng, và tính giờ theo lúc chụp khung hình, nên bảng gần hay xa đều được xếp nhanh chậm như nhau. Màn chuẩn bị hiện độ phân giải và số lần quét mỗi giây.
+- Chốt đáp án: cùng một chữ được thấy ít nhất 3 lần trong 0,3 giây (`holdMs`). Một lần đọc lệch lẻ loi thì bỏ qua, hụt vài khung hình không làm đếm lại. Bảng cầm chéo gần 45° không rõ chọn chữ nào nên không được tính cho đến khi cầm thẳng lại.
 - Lúc hỏi đáp, màn hình chuyển sang toàn màn hình: câu hỏi và bốn đáp án chiếm gần hết diện tích, cỡ chữ tự phóng to hết mức vừa khung để hàng bàn cuối đọc được. Lúc đọc đề chỉ có câu hỏi nên chữ to nhất.
 - Hết số câu của lượt thì hiện bảng xếp hạng các nhóm. Điểm Paddle Buzzer không tính vào kỷ lục, skin hay chứng chỉ.
 - Thông số (số nhóm, số câu, thời gian, điểm) nằm trong `PADDLE_BUZZER` của `data/config/game-config.js`.
