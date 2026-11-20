@@ -5,7 +5,6 @@ const ALLOWED_TRANSITIONS = {
     'SKIN_COLLECTION',
     'LEADERBOARD',
     'CERTIFICATE',
-    'PADDLE_BUZZER',
     'LOGIN',
   ],
   PLAYING: ['GAME_OVER', 'MAIN_MENU'],
@@ -13,7 +12,8 @@ const ALLOWED_TRANSITIONS = {
   SKIN_COLLECTION: ['MAIN_MENU', 'LEADERBOARD', 'CERTIFICATE'],
   LEADERBOARD: ['MAIN_MENU', 'SKIN_COLLECTION', 'CERTIFICATE'],
   CERTIFICATE: ['MAIN_MENU', 'SKIN_COLLECTION', 'LEADERBOARD'],
-  PADDLE_BUZZER: ['MAIN_MENU'],
+  // Chỉ vào được bằng địa chỉ #paddle lúc mở trang, không có đường vào từ màn hình khác
+  PADDLE_BUZZER: ['MAIN_MENU', 'LOGIN'],
 };
 
 export function canTransitionScreen(from, to) {

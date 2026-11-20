@@ -68,7 +68,7 @@
 
 ## 6. Paddle Buzzer (thi theo nhóm bằng bảng bìa)
 
-- Mở từ `MAIN_MENU`. Máy đặt trên bàn giáo viên, màn hình và camera cùng quay về phía lớp; không cần máy chiếu hay thiết bị cho học sinh.
+- Dành cho giáo viên nên không có nút trên trang chính: mở bằng địa chỉ trang có đuôi `#paddle`, không cần đăng nhập. Thoát ra thì về `MAIN_MENU` (hoặc `LOGIN` nếu chưa có hồ sơ). Máy đặt trên bàn giáo viên, màn hình và camera cùng quay về phía lớp; không cần máy chiếu hay thiết bị cho học sinh.
 - Lớp chia sẵn 12 nhóm, mỗi dãy bàn của một khối là một nhóm 4-5 bạn (`PADDLE_BUZZER.groupCount`), không phải nhập số nhóm. Mỗi nhóm cầm một bảng bìa in từ nút **In bảng**: mặt trước là mã vuông 4x4 (số mã = số nhóm − 1), mặt sau là số nhóm. Bốn cạnh ghi A/B/C/D; cạnh nào quay lên trên là đáp án của nhóm.
 - Câu hỏi lấy ngẫu nhiên từ kho câu hỏi gameplay (Unit 1 - Unit 5). Mỗi câu đi qua ba bước, chuyển bằng Space/Enter hoặc nút trên màn hình:
   1. **Đọc đề**: chỉ hiện câu đề, giáo viên đọc to rồi nhấn Space. Máy không tự đọc.

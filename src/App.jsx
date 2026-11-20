@@ -18,6 +18,9 @@ import { soundFX } from './utils/sound';
 
 const TAB_SCREENS = new Set(['MAIN_MENU', 'SKIN_COLLECTION', 'LEADERBOARD', 'CERTIFICATE']);
 
+// Paddle Buzzer dành cho giáo viên nên không có nút trên trang chính; mở bằng địa chỉ có đuôi #paddle
+const OPENS_PADDLE_BUZZER = window.location.hash === '#paddle';
+
 const validMode = (mode) => (GAME_MODES[mode] ? mode : 'BASIC');
 
 export default function App() {
@@ -31,7 +34,10 @@ export default function App() {
       skin: SkinManager.getEquippedSkin(savedProfile, savedProgress),
     };
   });
-  const [screen, setScreen] = useState(initial.profile ? 'MAIN_MENU' : 'LOGIN');
+  const [screen, setScreen] = useState(() => {
+    if (OPENS_PADDLE_BUZZER) return 'PADDLE_BUZZER';
+    return initial.profile ? 'MAIN_MENU' : 'LOGIN';
+  });
   const [profile, setProfile] = useState(initial.profile);
   const [progress, setProgress] = useState(initial.progress);
   const [equippedSkin, setEquippedSkin] = useState(initial.skin);
@@ -107,6 +113,11 @@ export default function App() {
       {/* Màn hình đăng nhập: chỉ gồm Họ và tên + Lớp */}
       {screen === 'LOGIN' && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
 
+      {/* Không cần đăng nhập: giáo viên mở thẳng bằng địa chỉ #paddle */}
+      {screen === 'PADDLE_BUZZER' && (
+        <PaddleBuzzerScreen onExit={() => handleTabNavigate(profile ? 'MAIN_MENU' : 'LOGIN')} />
+      )}
+
       {profile && (
         <main className={showTabBar ? 'pb-[calc(6rem+env(safe-area-inset-bottom))]' : ''}>
           {screen === 'MAIN_MENU' && (
@@ -121,7 +132,6 @@ export default function App() {
               }}
               onPlay={() => startGame(false)}
               onOpenSkins={() => handleTabNavigate('SKIN_COLLECTION')}
-              onOpenPaddle={() => handleTabNavigate('PADDLE_BUZZER')}
               onLogout={handleLogout}
             />
           )}
@@ -145,10 +155,6 @@ export default function App() {
               onHome={() => handleTabNavigate('MAIN_MENU')}
               onEquipSkin={handleEquipSkin}
             />
-          )}
-
-          {screen === 'PADDLE_BUZZER' && (
-            <PaddleBuzzerScreen onExit={() => handleTabNavigate('MAIN_MENU')} />
           )}
 
           {screen === 'SKIN_COLLECTION' && (

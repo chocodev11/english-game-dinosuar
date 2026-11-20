@@ -33,7 +33,6 @@ export function HomeScreen({
   onSelectMode,
   onPlay,
   onOpenSkins,
-  onOpenPaddle,
   onLogout,
 }) {
   const [openSheet, setOpenSheet] = useState(null);
@@ -129,10 +128,6 @@ export function HomeScreen({
       <button type="button" onClick={onPlay} className="pixel-btn mt-7 min-h-16 w-full text-[36px] short:mt-5 short:min-h-14">
         <PixelSprite rows={ICONS.play} size={22} />
         Chơi
-      </button>
-
-      <button type="button" onClick={onOpenPaddle} className="pixel-btn pixel-btn-quiet mt-5 w-full">
-        Paddle Buzzer · thi theo nhóm
       </button>
 
       <div className="mt-7 short:mt-5">
