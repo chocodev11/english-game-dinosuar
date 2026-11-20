@@ -1,18 +1,20 @@
 import aruco from 'js-aruco2';
 import cvModule from 'js-aruco2/src/cv.js';
 import 'js-aruco2/src/dictionaries/aruco_4x4_1000.js';
+import { PADDLE_BUZZER } from '../../data/config/game-config.js';
 
 const { AR } = aruco;
 const { CV } = cvModule;
 
-// Bộ mã 4x4 có ô to nhất nên nhận được từ xa nhất; chỉ giữ MAX_PADDLES mã đầu (trùng DICT_4X4_50 của OpenCV)
-const MAX_PADDLES = 50;
+// Bộ mã 4x4 có ô to nhất nên nhận được từ xa nhất; chỉ giữ mã của các nhóm đang chơi.
+// Tối đa 20 mã đầu thì hai mã bất kỳ (kể cả khi xoay) khác nhau ít nhất 5 ô, nên sửa được mã đọc sai 2 ô
+// (bảng xa bị nhòe) mà không nhầm sang nhóm khác hay chữ khác.
 const DICTIONARY_NAME = 'PADDLE_4X4';
 AR.DICTIONARIES[DICTIONARY_NAME] = {
   nBits: 16,
-  // Chấp nhận mã đọc lệch tối đa 1 ô
-  tau: 2,
-  codeList: AR.DICTIONARIES.ARUCO_4X4_1000.codeList.slice(0, MAX_PADDLES),
+  // Chấp nhận mã đọc lệch tối đa 2 ô
+  tau: 3,
+  codeList: AR.DICTIONARIES.ARUCO_4X4_1000.codeList.slice(0, PADDLE_BUZZER.groupCount),
 };
 
 // Cạnh ngắn nhất (px) của một ô vuông đen còn được xét là mã
@@ -38,7 +40,8 @@ export const getMarkerSvg = (id) => detector.dictionary.generateSVG(id);
 
 /**
  * Tìm các bảng trong một khung hình hoặc một mảnh khung hình ({ width, height, data } dạng RGBA).
- * Trả về [{ id, answer }]; answer là cạnh của mã đang quay lên trên: 0 = A (cạnh trên), 1 = B (phải), 2 = C (dưới), 3 = D (trái).
+ * Trả về [{ id, answer, corners }]; answer là cạnh của mã đang quay lên trên: 0 = A (cạnh trên), 1 = B (phải), 2 = C (dưới), 3 = D (trái);
+ * corners là 4 góc của mã ({ x, y } theo px của ảnh đưa vào).
  */
 export function detectPaddles(image) {
   sizeBuffers(image.width, image.height);
@@ -71,7 +74,7 @@ export function detectPaddles(image) {
     // Bảng cầm chéo gần 45° thì hai cạnh cao ngang nhau, không rõ nhóm chọn chữ nào nên bỏ qua
     const side = Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y);
     if (nextY - topY < side * DIAGONAL_MARGIN) continue;
-    paddles.set(id, { id, answer });
+    paddles.set(id, { id, answer, corners });
   }
   return [...paddles.values()];
 }

@@ -6,6 +6,7 @@ import { QuestionController } from '../game/question-controller';
 import { LETTERS, LETTER_COLORS, renderMarked } from '../ui/answer-format';
 import { PixelBar } from '../ui/PixelBar';
 import { PixelSprite } from '../ui/PixelSprite';
+import { SoundSettings } from '../ui/SoundSettings';
 import { shuffleArray } from '../utils/random';
 import { soundFX } from '../utils/sound';
 import { PaddleGame } from './paddle-game';
@@ -15,6 +16,32 @@ import { PaddlePrintSheet } from './PaddlePrintSheet';
 const LOW_TIME_SEC = 5;
 const GROUP_COUNT = PADDLE_BUZZER.groupCount;
 const GROUPS = Array.from({ length: GROUP_COUNT }, (_, i) => i);
+// Bước công bố xếp ảnh các nhóm theo tốc độ, mỗi hàng PODIUM_SIZE nhóm; PODIUM_SIZE nhóm đúng và nhanh nhất được viền nổi bật
+const PODIUM_SIZE = 3;
+const PODIUM_FRAME = '0 0 0 0.9vh var(--color-sun), 0 0 0 calc(0.9vh + 3px) var(--color-ink)';
+// Thời gian dừng ở mỗi hàng ảnh trước khi tự cuộn xuống hàng kế
+const REVEAL_SCROLL_MS = 2600;
+// Ảnh chụp nhóm lúc chốt: vùng vuông rộng gấp PHOTO_SPAN lần cạnh bảng, lệch xuống dưới để thấy cả người cầm
+const PHOTO_SPAN = 3;
+const PHOTO_PX = 320;
+
+// Cắt vùng quanh bảng từ khung hình camera hiện tại; ảnh chỉ nằm trong bộ nhớ trang và bị bỏ khi sang câu khác
+function capturePhoto(video, corners) {
+  const xs = corners.map((corner) => corner.x);
+  const ys = corners.map((corner) => corner.y);
+  const left = Math.min(...xs);
+  const top = Math.min(...ys);
+  const side = Math.max(Math.max(...xs) - left, Math.max(...ys) - top);
+  const size = side * PHOTO_SPAN;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = PHOTO_PX;
+  canvas.height = PHOTO_PX;
+  canvas
+    .getContext('2d')
+    .drawImage(video, left + side / 2 - size / 2, top + side / 2 - size * 0.35, size, size, 0, 0, PHOTO_PX, PHOTO_PX);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
 
 const HOW_TO = [
   'Đặt máy trên bàn giáo viên, màn hình và camera quay về phía lớp.',
@@ -29,10 +56,10 @@ function GroupChip({ group, fill, dim, note, stage = false }) {
       className={`pixel-box grid place-items-center px-1 py-1 text-center text-text ${stage ? 'min-h-0' : 'min-h-14'}`}
       style={{ '--fill': fill, opacity: dim ? 0.45 : 1 }}
     >
-      <span className={`font-pixel font-bold leading-none ${stage ? 'text-[4.6vh]' : 'text-[28px]'}`}>
+      <span className={`font-pixel font-bold leading-none ${stage ? 'text-[7.5vh]' : 'text-[28px]'}`}>
         {group + 1}
       </span>
-      <span className={`font-semibold leading-none ${stage ? 'min-h-[2vh] text-[2vh]' : 'min-h-4 text-[13px]'}`}>
+      <span className={`font-semibold leading-none ${stage ? 'min-h-[2.6vh] text-[2.6vh]' : 'min-h-4 text-[13px]'}`}>
         {note}
       </span>
     </li>
@@ -89,6 +116,11 @@ export function PaddleBuzzerScreen({ onExit }) {
   const frameHandlerRef = useRef(null);
   const stepHandlerRef = useRef(null);
   const seenKeyRef = useRef('');
+  // Nhóm đã được camera thấy ít nhất một lần ở màn chuẩn bị, để biết chỗ đặt máy đã bao hết lớp chưa
+  const checkedRef = useRef(new Set());
+  // Ảnh chụp từng nhóm lúc chốt đáp án của câu hiện tại (nhóm → ảnh)
+  const photosRef = useRef(new Map());
+  const rankListRef = useRef(null);
   const secondRef = useRef(0);
   // Luật chơi nằm trong PaddleGame (ngoài React); gọi rerender mỗi khi nó đổi trạng thái
   const [, rerender] = useReducer((n) => n + 1, 0);
@@ -130,6 +162,7 @@ export function PaddleBuzzerScreen({ onExit }) {
     const g = gameRef.current;
     if (!g || g.phase !== 'REVEAL') return;
     g.next();
+    photosRef.current = new Map();
     if (g.phase === 'FINAL') soundFX.playMilestonePass();
     rerender();
   };
@@ -140,6 +173,7 @@ export function PaddleBuzzerScreen({ onExit }) {
       shuffleArray(pool).slice(0, PADDLE_BUZZER.questionCount),
       GROUP_COUNT
     );
+    photosRef.current = new Map();
     // Toàn màn hình để chữ to nhất có thể; không vào được thì vẫn chơi bình thường
     document.documentElement.requestFullscreen().catch(() => {});
     rerender();
@@ -167,11 +201,22 @@ export function PaddleBuzzerScreen({ onExit }) {
         .join(' ');
       if (key !== seenKeyRef.current) {
         seenKeyRef.current = key;
+        for (const p of paddles) {
+          if (p.id < GROUP_COUNT) checkedRef.current.add(p.id);
+        }
         setSeen(new Map(paddles.map((p) => [p.id, p.answer])));
       }
       return;
     }
     const changed = g.update(paddles, now);
+    if (changed) {
+      // Nhóm vừa chốt ở khung hình này thì chụp luôn vùng quanh bảng của nhóm
+      for (const p of paddles) {
+        if (g.locked.has(p.id) && !photosRef.current.has(p.id)) {
+          photosRef.current.set(p.id, capturePhoto(videoRef.current, p.corners));
+        }
+      }
+    }
     if (g.phase === 'REVEAL' && changed) {
       announceReveal();
       return;
@@ -185,9 +230,14 @@ export function PaddleBuzzerScreen({ onExit }) {
     }
   };
 
-  // Mở camera và quét mã theo từng khung hình camera; nhạc nền tắt để lớp nghe rõ giáo viên đọc đề
+  // Nhạc nền chỉ chạy lúc đếm giờ trả lời và ở bảng kết quả; các lúc khác tắt để lớp nghe rõ giáo viên
   useEffect(() => {
-    soundFX.stopBgm();
+    if (phase === 'OPEN' || phase === 'FINAL') soundFX.startBgm();
+    else soundFX.stopBgm();
+  }, [phase]);
+
+  // Mở camera và quét mã theo từng khung hình camera
+  useEffect(() => {
     if (!navigator.mediaDevices) {
       setCameraError('Trình duyệt chỉ cho dùng camera trên địa chỉ https hoặc localhost.');
       return undefined;
@@ -271,8 +321,31 @@ export function PaddleBuzzerScreen({ onExit }) {
   }, []);
 
   const setup = phase === 'SETUP';
-  const seenCount = [...seen.keys()].filter((id) => id < GROUP_COUNT).length;
+  const unchecked = GROUPS.filter((group) => !checkedRef.current.has(group));
   const question = game && phase !== 'FINAL' ? game.question : null;
+  const questionIndex = game ? game.index : -1;
+
+  // Lúc công bố: tự cuộn từng hàng ảnh từ nhóm nhanh nhất xuống nhóm chậm nhất, hết thì quay về đầu
+  useEffect(() => {
+    if (phase !== 'REVEAL') return undefined;
+    const list = rankListRef.current;
+    let row = 0;
+    const timer = window.setInterval(() => {
+      row += 1;
+      const first = list.children[row * PODIUM_SIZE];
+      if (!first) {
+        window.clearInterval(timer);
+        list.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      list.scrollTo({ top: first.offsetTop - list.children[0].offsetTop, behavior: 'smooth' });
+    }, REVEAL_SCROLL_MS);
+    return () => window.clearInterval(timer);
+  }, [phase, questionIndex]);
+
+  const podium = phase === 'REVEAL' ? game.correctGroups.slice(0, PODIUM_SIZE) : [];
+  // Các nhóm đã chốt, xếp từ nhanh đến chậm
+  const finishers = phase === 'REVEAL' ? [...game.locked].sort((a, b) => a[1].at - b[1].at) : [];
 
   let stepLabel = 'Hiện đáp án';
   if (phase === 'OPEN') stepLabel = 'Chốt sớm';
@@ -283,9 +356,8 @@ export function PaddleBuzzerScreen({ onExit }) {
   const chipFor = (group) => {
     if (setup) {
       const answer = seen.get(group);
-      return answer === undefined
-        ? { note: '' }
-        : { fill: 'var(--color-sun)', note: LETTERS[answer] };
+      if (answer !== undefined) return { fill: 'var(--color-sun)', note: LETTERS[answer] };
+      return checkedRef.current.has(group) ? { fill: 'var(--color-leaf-soft)', note: 'đã thấy' } : { note: '' };
     }
     const lock = game.locked.get(group);
     if (phase !== 'REVEAL') {
@@ -310,7 +382,8 @@ export function PaddleBuzzerScreen({ onExit }) {
   } else if (question) {
     rootClass = 'fixed inset-0 z-20 flex flex-col gap-[1.5vh] bg-paper p-[1.5vh]';
     bodyClass = 'flex min-h-0 flex-1 flex-col gap-[1.5vh]';
-    cameraClass = 'absolute bottom-[1.5vh] right-[1.5vh] w-[13vw]';
+    // Cao bằng hàng ô nhóm (13vh, tỉ lệ 16:9) để không đè lên ô đáp án
+    cameraClass = 'absolute bottom-[1.5vh] right-[1.5vh] w-[23vh]';
   }
 
   return (
@@ -387,15 +460,29 @@ export function PaddleBuzzerScreen({ onExit }) {
               <p className="mt-4 text-[15px] text-muted" aria-live="polite">
                 {cameraError ??
                   (cameraReady
-                    ? `Camera đang thấy ${seenCount}/${GROUP_COUNT} bảng. Giơ thử từng bảng để kiểm tra.`
+                    ? `Cho mỗi nhóm giơ bảng một lần để chắc camera thấy hết lớp, kể cả bàn cuối. Đã thấy ${
+                        GROUP_COUNT - unchecked.length
+                      }/${GROUP_COUNT} nhóm${unchecked.length > 0 ? `, còn thiếu nhóm ${unchecked.map((group) => group + 1).join(', ')}` : ''}.`
                     : 'Đang mở camera…')}
               </p>
               {scanInfo && <p className="mt-1 text-[13px] text-muted">Camera {scanInfo}.</p>}
-              <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-3">
+              <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(4.25rem,1fr))] gap-3">
                 {GROUPS.map((group) => (
                   <GroupChip key={group} group={group} {...chipFor(group)} />
                 ))}
               </ul>
+              {checkedRef.current.size > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    checkedRef.current = new Set();
+                    rerender();
+                  }}
+                  className="mt-2 min-h-11 text-[15px] font-semibold text-sky"
+                >
+                  Kiểm tra lại từ đầu
+                </button>
+              )}
             </>
           )}
         </div>
@@ -430,6 +517,11 @@ export function PaddleBuzzerScreen({ onExit }) {
               </button>
             </div>
 
+            {/* Kéo thanh nhạc nền sẽ phát thử ngay để chỉnh cho vừa lớp */}
+            <div className="mt-6">
+              <SoundSettings />
+            </div>
+
             <ol className="mt-7 grid gap-3">
               {HOW_TO.map((line, idx) => (
                 <li key={line} className="flex gap-3">
@@ -457,39 +549,94 @@ export function PaddleBuzzerScreen({ onExit }) {
             </FitText>
 
             {phase !== 'READING' && (
-              <ul className="grid min-h-0 flex-[3] grid-cols-2 grid-rows-2 gap-[1.5vh]">
-                {question.a.map((option, idx) => {
-                  const correct = phase === 'REVEAL' && idx === question.c;
-                  return (
-                    <li
-                      key={`${idx}-${option}`}
-                      className="pixel-box flex min-h-0 items-center gap-[1.2vw] px-[1vw]"
-                      style={{
-                        '--fill': correct ? 'var(--color-leaf-soft)' : undefined,
-                        '--edge': correct ? 'var(--color-leaf)' : undefined,
-                        opacity: phase === 'REVEAL' && !correct ? 0.35 : 1,
-                      }}
-                    >
-                      <span
-                        className="grid size-[12vh] shrink-0 place-items-center font-pixel text-[10vh] font-bold leading-none text-[#1f1f1f]"
-                        style={{ backgroundColor: LETTER_COLORS[idx] }}
+              <div className="flex min-h-0 flex-[3] gap-[1.5vh]">
+                {/* Lúc công bố, bốn đáp án dồn sang trái thành một cột để nhường chỗ cho ảnh các nhóm */}
+                <ul
+                  className={`grid min-h-0 gap-[1.5vh] ${
+                    phase === 'REVEAL' ? 'flex-[2] grid-rows-4' : 'flex-1 grid-cols-2 grid-rows-2'
+                  }`}
+                >
+                  {question.a.map((option, idx) => {
+                    const correct = phase === 'REVEAL' && idx === question.c;
+                    return (
+                      <li
+                        key={`${idx}-${option}`}
+                        className="pixel-box flex min-h-0 items-center gap-[1.2vw] px-[1vw]"
+                        style={{
+                          '--fill': correct ? 'var(--color-leaf-soft)' : undefined,
+                          '--edge': correct ? 'var(--color-leaf)' : undefined,
+                          opacity: phase === 'REVEAL' && !correct ? 0.35 : 1,
+                        }}
                       >
-                        {LETTERS[idx]}
-                      </span>
-                      <FitText
-                        fitKey={option}
-                        className="min-w-0 flex-1 self-stretch font-semibold leading-tight text-text"
-                      >
-                        {renderMarked(option)}
-                      </FitText>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <span
+                          className={`grid shrink-0 place-items-center font-pixel font-bold leading-none text-[#1f1f1f] ${
+                            phase === 'REVEAL' ? 'size-[8vh] text-[6.5vh]' : 'size-[12vh] text-[10vh]'
+                          }`}
+                          style={{ backgroundColor: LETTER_COLORS[idx] }}
+                        >
+                          {LETTERS[idx]}
+                        </span>
+                        <FitText
+                          // Đo lại ngay khi ô đáp án đổi cỡ lúc công bố
+                          fitKey={`${option}|${phase}`}
+                          className="min-w-0 flex-1 self-stretch font-semibold leading-tight text-text"
+                        >
+                          {renderMarked(option)}
+                        </FitText>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {phase === 'REVEAL' && (
+                  <ol
+                    ref={rankListRef}
+                    className="relative grid min-h-0 flex-[3] auto-rows-[100%] grid-cols-3 gap-[3vh] overflow-y-auto p-[1.2vh] [scrollbar-width:none]"
+                  >
+                    {finishers.map(([group, lock], rank) => {
+                      const correct = game.correctGroups.includes(group);
+                      const photo = photosRef.current.get(group);
+                      const seconds = ((lock.at - game.openedAt) / 1000).toFixed(1).replace('.', ',');
+                      let style = { '--fill': correct ? 'var(--color-leaf-soft)' : 'var(--color-berry-soft)' };
+                      if (podium.includes(group)) style = { '--fill': 'var(--color-sun)', boxShadow: PODIUM_FRAME };
+                      return (
+                        <li key={group} className="pixel-box flex min-h-0 flex-col" style={style}>
+                          <div className="relative min-h-0 flex-1 bg-ink">
+                            {photo && (
+                              <img
+                                src={photo}
+                                alt={`Ảnh nhóm ${group + 1} lúc giơ bảng`}
+                                className="absolute inset-0 size-full object-cover"
+                              />
+                            )}
+                            <span className="absolute left-0 top-0 grid size-[8vh] place-items-center bg-ink font-pixel text-[6.5vh] font-bold leading-none text-paper">
+                              {rank + 1}
+                            </span>
+                          </div>
+                          <p className="pt-[0.8vh] text-center font-pixel text-[6vh] font-bold leading-none text-text">
+                            Nhóm {group + 1}
+                          </p>
+                          <p className="py-[0.8vh] text-center text-[2.8vh] font-semibold leading-none text-text">
+                            {LETTERS[lock.answer]} · {seconds} giây
+                          </p>
+                        </li>
+                      );
+                    })}
+                    {GROUPS.filter((group) => !game.locked.has(group)).map((group) => (
+                      <li key={group} className="pixel-box grid min-h-0 place-items-center text-center opacity-45">
+                        <div>
+                          <p className="font-pixel text-[6vh] font-bold leading-none text-text">Nhóm {group + 1}</p>
+                          <p className="pt-[0.8vh] text-[2.8vh] font-semibold leading-none text-text">Chưa giơ bảng</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
             )}
 
             <ul
-              className="grid h-[9vh] shrink-0 gap-[0.7vw] pr-[14.5vw]"
+              className="grid h-[13vh] shrink-0 gap-[0.7vw] pr-[24.5vh]"
               style={{ gridTemplateColumns: `repeat(${GROUP_COUNT}, minmax(0, 1fr))` }}
             >
               {GROUPS.map((group) => (

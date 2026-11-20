@@ -23,7 +23,7 @@ export class PaddleScanner {
     this.wide = newContext();
   }
 
-  /** Trả về Promise<[{ id, answer }]> cho khung hình hiện tại của video. */
+  /** Trả về Promise<[{ id, answer, corners }]> cho khung hình hiện tại của video; corners theo px của khung hình. */
   scan(video) {
     const { full, wide } = this;
     const width = video.videoWidth;
@@ -37,31 +37,44 @@ export class PaddleScanner {
     full.drawImage(video, 0, 0);
     wide.drawImage(video, 0, 0, wide.canvas.width, wide.canvas.height);
 
-    const parts = [wide.getImageData(0, 0, wide.canvas.width, wide.canvas.height)];
+    // left, scale: vị trí và tỉ lệ của mảnh so với khung hình, để đổi toạ độ góc bảng về khung hình
+    const parts = [
+      { image: wide.getImageData(0, 0, wide.canvas.width, wide.canvas.height), left: 0, scale: WIDE_SCALE },
+    ];
     const core = Math.ceil(width / STRIPS);
     for (let i = 0; i < STRIPS; i += 1) {
       const left = Math.max(0, i * core - OVERLAP);
-      parts.push(full.getImageData(left, 0, Math.min(width, (i + 1) * core) - left, height));
+      parts.push({
+        image: full.getImageData(left, 0, Math.min(width, (i + 1) * core) - left, height),
+        left,
+        scale: 1,
+      });
     }
 
     const jobs = parts.map(
-      (part, i) =>
+      ({ image }, i) =>
         new Promise((resolve, reject) => {
           const worker = this.workers[i];
           worker.onmessage = (e) => resolve(e.data);
           worker.onerror = reject;
-          worker.postMessage({ width: part.width, height: part.height, buffer: part.data.buffer }, [
-            part.data.buffer,
+          worker.postMessage({ width: image.width, height: image.height, buffer: image.data.buffer }, [
+            image.data.buffer,
           ]);
         })
     );
 
-    // Một bảng có thể nằm trong hai mảnh chồng nhau; gộp theo số mã
+    // Một bảng có thể nằm trong hai mảnh chồng nhau; gộp theo số mã (dải đủ nét xếp sau nên được ưu tiên)
     return Promise.all(jobs).then((results) => {
       const paddles = new Map();
-      for (const found of results) {
-        for (const paddle of found) paddles.set(paddle.id, paddle);
-      }
+      results.forEach((found, i) => {
+        const { left, scale } = parts[i];
+        for (const paddle of found) {
+          paddles.set(paddle.id, {
+            ...paddle,
+            corners: paddle.corners.map(({ x, y }) => ({ x: x / scale + left, y: y / scale })),
+          });
+        }
+      });
       return [...paddles.values()];
     });
   }

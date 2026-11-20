@@ -73,9 +73,12 @@
 - Câu hỏi lấy ngẫu nhiên từ kho câu hỏi gameplay (Unit 1 - Unit 5). Mỗi câu đi qua ba bước, chuyển bằng Space/Enter hoặc nút trên màn hình:
   1. **Đọc đề**: chỉ hiện câu đề, giáo viên đọc to rồi nhấn Space. Máy không tự đọc.
   2. **Trả lời**: chuông kêu, bốn đáp án hiện ra, đồng hồ đếm ngược. Nhóm giơ bảng và giữ yên thì được chốt; đã chốt không đổi được. Bảng giơ sẵn từ lúc đọc đề phải hạ xuống rồi giơ lại. Hết giờ, đủ mọi nhóm hoặc giáo viên chốt sớm thì sang bước 3.
-  3. **Công bố**: hiện đáp án đúng và lựa chọn của từng nhóm. Đúng +1 điểm, nhóm đúng và nhanh nhất +2 điểm nữa.
+  3. **Công bố**: hiện đáp án đúng và ảnh của mọi nhóm đã chốt, xếp từ nhanh đến chậm kèm chữ đã chọn và thời gian; danh sách tự cuộn từng hàng 3 nhóm từ đầu xuống cuối rồi quay về đầu. Ba nhóm đúng và nhanh nhất có khung vàng. Ảnh được cắt quanh bảng từ khung hình camera lúc nhóm chốt, chỉ nằm trong bộ nhớ trang, sang câu khác là bỏ. Đúng +1 điểm, nhóm đúng và nhanh nhất +2 điểm nữa.
 - Quét bảng: mỗi khung hình camera được cắt thành các dải dọc chồng mép và quét song song trên nhiều worker (số dải theo số nhân của máy), kèm một lượt quét cả khung hình thu nhỏ cho bảng đứng sát máy. Kết quả của một khung hình được gộp rồi mới dùng, và tính giờ theo lúc chụp khung hình, nên bảng gần hay xa đều được xếp nhanh chậm như nhau. Màn chuẩn bị hiện độ phân giải và số lần quét mỗi giây.
+- Bảng xa bị nhòe: máy chỉ nhận mã của các nhóm đang chơi (tối đa 20 mã, hai mã bất kỳ khác nhau ít nhất 5 ô kể cả khi xoay), nên mã đọc sai tới 2 ô vẫn được sửa đúng về nhóm và chữ của nó.
+- Kiểm tra trước khi chơi: ở màn chuẩn bị, nhóm nào đã được camera thấy ít nhất một lần thì ô của nhóm đó giữ màu xanh, kèm danh sách nhóm còn thiếu. Giáo viên cho từng nhóm giơ bảng một lần để chắc camera bao hết lớp; học sinh bàn cuối không cần nhìn hình camera.
 - Chốt đáp án: cùng một chữ được thấy ít nhất 3 lần trong 0,3 giây (`holdMs`). Một lần đọc lệch lẻ loi thì bỏ qua, hụt vài khung hình không làm đếm lại. Bảng cầm chéo gần 45° không rõ chọn chữ nào nên không được tính cho đến khi cầm thẳng lại.
 - Lúc hỏi đáp, màn hình chuyển sang toàn màn hình: câu hỏi và bốn đáp án chiếm gần hết diện tích, cỡ chữ tự phóng to hết mức vừa khung để hàng bàn cuối đọc được. Lúc đọc đề chỉ có câu hỏi nên chữ to nhất.
+- Nhạc nền của trò khủng long chạy lúc đếm giờ trả lời và ở bảng kết quả; lúc đọc đề và công bố thì tắt để lớp nghe rõ giáo viên. Âm lượng chỉnh ở màn chuẩn bị.
 - Hết số câu của lượt thì hiện bảng xếp hạng các nhóm. Điểm Paddle Buzzer không tính vào kỷ lục, skin hay chứng chỉ.
 - Thông số (số nhóm, số câu, thời gian, điểm) nằm trong `PADDLE_BUZZER` của `data/config/game-config.js`.
