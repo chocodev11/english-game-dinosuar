@@ -80,6 +80,21 @@ export const ENVIRONMENTS = {
   SAKURA: { id: 'SAKURA', name: 'Mưa hoa anh đào', color: '#f9a8d4', weight: 20, durationSec: [14, 22] },
 };
 
+// Paddle Buzzer: thi theo nhóm bằng bảng bìa có mã vuông. Webcam nhận nhóm nào giơ bảng và cạnh nào của bảng quay lên trên.
+export const PADDLE_BUZZER = {
+  // Mỗi dãy bàn của một khối là một nhóm (4-5 bạn): lớp có 2 khối x 6 dãy
+  groupCount: 12,
+  questionCount: 10,
+  answerTimeSec: 20,
+  correctPoints: 1,
+  // Thưởng thêm cho nhóm trả lời đúng sớm nhất
+  fastestBonus: 2,
+  // Bảng phải khuất khỏi khung hình chừng này (ms) sau lúc mở trả lời rồi giơ lại mới được tính
+  rearmMs: 400,
+  // Giữ yên một đáp án chừng này (ms) thì chốt
+  holdMs: 400,
+};
+
 export const DEFAULT_MILESTONE_PASS_RATIO = 0.8;
 
 // Điểm của một lượt = số câu trả lời đúng. Cột mốc tính theo số câu đúng trong lượt;

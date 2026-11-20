@@ -8,6 +8,7 @@ import { GameplayScreen } from './game/GameplayScreen';
 import { ResultScreen } from './game/ResultScreen';
 import { HomeScreen } from './home/HomeScreen';
 import { LeaderboardScreen } from './leaderboard/LeaderboardScreen';
+import { PaddleBuzzerScreen } from './paddle/PaddleBuzzerScreen';
 import { ApiClient } from './services/api-client';
 import { ScoreService } from './services/score-service';
 import { SkinManager } from './skins/skin-manager';
@@ -120,6 +121,7 @@ export default function App() {
               }}
               onPlay={() => startGame(false)}
               onOpenSkins={() => handleTabNavigate('SKIN_COLLECTION')}
+              onOpenPaddle={() => handleTabNavigate('PADDLE_BUZZER')}
               onLogout={handleLogout}
             />
           )}
@@ -143,6 +145,10 @@ export default function App() {
               onHome={() => handleTabNavigate('MAIN_MENU')}
               onEquipSkin={handleEquipSkin}
             />
+          )}
+
+          {screen === 'PADDLE_BUZZER' && (
+            <PaddleBuzzerScreen onExit={() => handleTabNavigate('MAIN_MENU')} />
           )}
 
           {screen === 'SKIN_COLLECTION' && (

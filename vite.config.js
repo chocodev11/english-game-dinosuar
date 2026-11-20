@@ -3,9 +3,21 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+// js-aruco2 gắn AR/CV lên `this` ở đầu file (kiểu CommonJS cũ) nên Rolldown không coi đó là export;
+// đổi sang `exports` cho cả bản build lẫn bước gom thư viện của dev server.
+const jsAruco2Exports = {
+  name: 'js-aruco2-exports',
+  transform(code, id) {
+    return /js-aruco2[\\/]src[\\/]/.test(id) ? code.replace(/\bthis\.(AR|CV)\b/g, 'exports.$1') : null;
+  },
+};
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), jsAruco2Exports],
+    optimizeDeps: {
+      rolldownOptions: {plugins: [jsAruco2Exports]},
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

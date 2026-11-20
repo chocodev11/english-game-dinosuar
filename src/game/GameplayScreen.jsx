@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GAME_MODES, POWER_UPS, POWER_UP_SPAWN } from '../../data/config/game-config';
 import { DinoAvatar } from '../skins/DinoAvatar';
+import { LETTERS, LETTER_COLORS, renderMarked } from '../ui/answer-format';
 import { PixelBar } from '../ui/PixelBar';
 import { PixelSprite } from '../ui/PixelSprite';
 import { Sheet } from '../ui/Sheet';
@@ -70,13 +71,6 @@ const ANSWER_KEYS = {
   Numpad4: 3,
   KeyD: 3,
 };
-const LETTERS = ['A', 'B', 'C', 'D'];
-const LETTER_COLORS = [
-  'var(--color-sky)',
-  'var(--color-grape)',
-  'var(--color-bubblegum)',
-  'var(--color-tangerine)',
-];
 const TRAIL_COLORS = {
   DUST: '#9ca3af',
   SPARKS: '#f59e0b',
@@ -95,18 +89,6 @@ const ANSWER_STYLES = {
 };
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-
-// Phần đặt trong {…} của câu hỏi/đáp án được gạch chân như trong đề kiểm tra
-const renderMarked = (text) =>
-  text.split(/\{([^}]*)\}/).map((part, i) =>
-    i % 2 ? (
-      <u key={i} className="decoration-2 underline-offset-4">
-        {part}
-      </u>
-    ) : (
-      part
-    )
-  );
 
 function AnswerButton({ index, text, state, disabled, onSelect }) {
   return (

@@ -4,7 +4,7 @@
 
 Ứng dụng vận hành theo State Machine tập trung (`src/core/state-manager.ts`), đảm bảo tại mỗi thời điểm chỉ có duy nhất một màn hình hiển thị:
 
-`LOGIN` → `MAIN_MENU` → (`PLAYING` → `GAME_OVER`) / `SKIN_COLLECTION` / `LEADERBOARD` / `CERTIFICATE`.
+`LOGIN` → `MAIN_MENU` → (`PLAYING` → `GAME_OVER`) / `SKIN_COLLECTION` / `LEADERBOARD` / `CERTIFICATE` / `PADDLE_BUZZER`.
 
 - Đã có hồ sơ lưu trên máy thì vào thẳng `MAIN_MENU`.
 - Chọn chế độ chơi ngay tại `MAIN_MENU`; hướng dẫn ngắn hiển thị ở trạng thái "Chạm để bắt đầu" của `PLAYING` và trong bảng "Cách chơi".
@@ -65,3 +65,15 @@
 - Gồm 5 cấp độ: `Basic`, `Rare`, `Legendary`, `God`, `Secret`.
 - Chỉ những skin đã thỏa mãn điều kiện mở khóa mới hiển thị nút **Trang bị**.
 - Khi nhấn **Trang bị**, skin được lưu ngay vào `localStorage` và cập nhật trực tiếp lên hình ảnh nhân vật ở cả Menu, Chứng chỉ và trong Canvas khi chạy.
+
+## 6. Paddle Buzzer (thi theo nhóm bằng bảng bìa)
+
+- Mở từ `MAIN_MENU`. Máy đặt trên bàn giáo viên, màn hình và camera cùng quay về phía lớp; không cần máy chiếu hay thiết bị cho học sinh.
+- Lớp chia sẵn 12 nhóm, mỗi dãy bàn của một khối là một nhóm 4-5 bạn (`PADDLE_BUZZER.groupCount`), không phải nhập số nhóm. Mỗi nhóm cầm một bảng bìa in từ nút **In bảng**: mặt trước là mã vuông 4x4 (số mã = số nhóm − 1), mặt sau là số nhóm. Bốn cạnh ghi A/B/C/D; cạnh nào quay lên trên là đáp án của nhóm.
+- Câu hỏi lấy ngẫu nhiên từ kho câu hỏi gameplay (Unit 1 - Unit 5). Mỗi câu đi qua ba bước, chuyển bằng Space/Enter hoặc nút trên màn hình:
+  1. **Đọc đề**: chỉ hiện câu đề, giáo viên đọc to rồi nhấn Space. Máy không tự đọc.
+  2. **Trả lời**: chuông kêu, bốn đáp án hiện ra, đồng hồ đếm ngược. Nhóm giơ bảng và giữ yên thì được chốt; đã chốt không đổi được. Bảng giơ sẵn từ lúc đọc đề phải hạ xuống rồi giơ lại. Hết giờ, đủ mọi nhóm hoặc giáo viên chốt sớm thì sang bước 3.
+  3. **Công bố**: hiện đáp án đúng và lựa chọn của từng nhóm. Đúng +1 điểm, nhóm đúng và nhanh nhất +2 điểm nữa.
+- Lúc hỏi đáp, màn hình chuyển sang toàn màn hình: câu hỏi và bốn đáp án chiếm gần hết diện tích, cỡ chữ tự phóng to hết mức vừa khung để hàng bàn cuối đọc được. Lúc đọc đề chỉ có câu hỏi nên chữ to nhất.
+- Hết số câu của lượt thì hiện bảng xếp hạng các nhóm. Điểm Paddle Buzzer không tính vào kỷ lục, skin hay chứng chỉ.
+- Thông số (số nhóm, số câu, thời gian, điểm) nằm trong `PADDLE_BUZZER` của `data/config/game-config.js`.
