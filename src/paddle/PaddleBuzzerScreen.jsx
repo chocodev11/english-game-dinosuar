@@ -16,6 +16,8 @@ import { PaddlePrintSheet } from './PaddlePrintSheet';
 const LOW_TIME_SEC = 5;
 const GROUP_COUNT = PADDLE_BUZZER.groupCount;
 const GROUPS = Array.from({ length: GROUP_COUNT }, (_, i) => i);
+// Ở màn chuẩn bị, bảng phải được thấy liền chừng này lần quét mới hiện, để một lần nhận nhầm đồ vật không bị tính là đã thấy nhóm
+const STEADY_SCANS = 3;
 // Bước công bố xếp ảnh các nhóm theo tốc độ, mỗi hàng PODIUM_SIZE nhóm; PODIUM_SIZE nhóm đúng và nhanh nhất được viền nổi bật
 const PODIUM_SIZE = 3;
 const PODIUM_FRAME = '0 0 0 0.9vh var(--color-sun), 0 0 0 calc(0.9vh + 3px) var(--color-ink)';
@@ -116,6 +118,8 @@ export function PaddleBuzzerScreen({ onExit }) {
   const frameHandlerRef = useRef(null);
   const stepHandlerRef = useRef(null);
   const seenKeyRef = useRef('');
+  // Số lần quét liền nhau gần nhất thấy từng bảng ở màn chuẩn bị (mã → số lần)
+  const streaksRef = useRef(new Map());
   // Nhóm đã được camera thấy ít nhất một lần ở màn chuẩn bị, để biết chỗ đặt máy đã bao hết lớp chưa
   const checkedRef = useRef(new Set());
   // Ảnh chụp từng nhóm lúc chốt đáp án của câu hiện tại (nhóm → ảnh)
@@ -195,16 +199,16 @@ export function PaddleBuzzerScreen({ onExit }) {
   frameHandlerRef.current = (paddles, now) => {
     const g = gameRef.current;
     if (!g) {
-      const key = paddles
+      streaksRef.current = new Map(paddles.map((p) => [p.id, (streaksRef.current.get(p.id) ?? 0) + 1]));
+      const steady = paddles.filter((p) => streaksRef.current.get(p.id) >= STEADY_SCANS);
+      const key = steady
         .map((p) => `${p.id}:${p.answer}`)
         .sort()
         .join(' ');
       if (key !== seenKeyRef.current) {
         seenKeyRef.current = key;
-        for (const p of paddles) {
-          if (p.id < GROUP_COUNT) checkedRef.current.add(p.id);
-        }
-        setSeen(new Map(paddles.map((p) => [p.id, p.answer])));
+        for (const p of steady) checkedRef.current.add(p.id);
+        setSeen(new Map(steady.map((p) => [p.id, p.answer])));
       }
       return;
     }
